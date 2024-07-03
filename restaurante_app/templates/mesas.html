@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Mesas{% endblock %}
+
+{% block content %}
+
+<div class="container flex">
+  <div class="mesas-section">
+    <h2>Mesas</h2>
+    <div class="mesa-grid">
+      {% for mesa in mesas %}
+      <a href="{% url 'mesas' %}?mesa_numero={{ mesa.numero }}"
+        class="mesa {% if mesa.EstMesCod.EstMesDes == 'ocupada' %}ocupada{% endif %}">
+        {{ mesa.numero }}
+      </a>
+      {% endfor %}
+    </div>
+    {% if request.user.TipUsuCod.TipUsuDes == "Administrador" %}
+    <a href="{% url 'editar_mesas' %}" id="editar-mesas">Editar mesas</a>
+    {% endif %}
+  </div>
+
+  <div id="detalle-mesa">
+    <h2>{% if mesa_seleccionada %}Mesa {{ mesa_seleccionada.numero }}{% else %}Selecciona una mesa{% endif %}</h2>
+    {% if mesa_seleccionada and form %}
+    <form method="POST" action="{% url 'detalle_pedido' mesa_seleccionada.numero %}">
+      {% csrf_token %}
+      {{ form }}
+      <button type="submit" class="btn btn-primary">Abrir Mesa</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

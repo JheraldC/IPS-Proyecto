@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+
+<div class="welcome-container">
+    <h2>¡Bienvenido/a, {{ request.user.first_name }}!</h2>
+
+    {% if request.user.TipUsuCod.TipUsuDes == "Administrador" %}
+        <p class="welcome-message admin">Estás en el panel de control del restaurante. ¡Gestiona todo desde aquí!</p>
+    {% elif request.user.TipUsuCod.TipUsuDes == "Mozo" %}
+        <p class="welcome-message mozo">¡Toma tus pedidos y brinda un servicio excepcional!</p>
+    {% elif request.user.TipUsuCod.TipUsuDes == "Cocinero" %}
+        <p class="welcome-message cocinero">¡Prepara los mejores platos para nuestros clientes!</p>
+    {% endif %}
+</div>
+
+{% endblock %}
+

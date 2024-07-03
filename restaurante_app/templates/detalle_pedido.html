@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detalle Pedido - Mesa {{ mesa.numero }}{% endblock %}
+
+{% block content %}
+
+<div class="container" data-mesa-numero="{{ mesa_seleccionada.numero }}">
+  <h2>Mesa {{ mesa.numero }}</h2>
+
+  <div class="flex">
+
+    <div class="columna">
+      <div class="menu-categorias">
+        <button class="categoria-btn active" data-categoria="todos">Todos</button>
+        {% for categoria in categorias %}
+        <button class="categoria-btn" data-categoria="{{ categoria.CatDes }}">{{ categoria.CatDes }}</button>
+        {% endfor %}
+      </div>
+
+      <div class="menu-items">
+        {% for plato in platos %}
+        <div class="menu-item" data-plato-id="{{ plato.MenCod }}" data-precio="{{ plato.precio }}"
+          data-categoria="{{ plato.CatCod.CatDes }}">
+          <img src="{{ plato.MenImg }}" alt="{{ plato.MenDes }}">
+          <div class="item-detalles">
+            <h3>{{ plato.MenDes }}</h3>
+            <p>S/{{ plato.precio }}</p>
+            <div class="cantidad-container">
+              <button class="btn-cantidad" data-action="restar">-</button>
+              <span class="cantidad">0</span>
+              <button class="btn-cantidad" data-action="sumar">+</button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+
+    <div class="columna">
+      <div id="pedido-resumen columna">
+        <h3>Resumen del Pedido:</h3>
+        <ul id="lista-pedido">
+        </ul>
+        <p>Total: S/<span id="total-amount">0.00</span></p>
+      </div>
+
+      <button id="finalizar-venta">Finalizar Venta</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  window.platos = JSON.parse('{{ platos_json|safe }}');
+  window.detalles_pedido = JSON.parse('{{ detalles_pedido_json|safe }}');
+</script>
+
+{% endblock %}
