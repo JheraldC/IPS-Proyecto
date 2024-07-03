@@ -46,19 +46,8 @@ def mesas_view(request):
                 form = AbrirMesaForm(request.POST, instance=mesa_seleccionada)  # Pasa la instancia de mesa al formulario
                 if form.is_valid():
                     mesa = form.save(commit=False)
-                    mesa.EstMesCod = EstadoMesa.objects.get(EstMesDes='ocupada')
+                    mesa.EstMesCod = EstadoMesa.objects.get(EstMesDes='ocupado')
                     mesa.save()
-
-                    # Crea un nuevo pedido para la mesa
-                    Pedido.objects.create(
-                        MesCod=mesa, 
-                        MozCod=form.cleaned_data['mozo'],  # Obtén el mozo del formulario
-                        PedFec=date.today(), 
-                        PedHor=timezone.now(), 
-                        PedTot=0, 
-                        PedObs=form.cleaned_data['comentarios'],  # Obtén las observaciones del formulario
-                        EstPedCod=EstadoPedido.objects.get(EstPedDes='enproceso')
-                    )
 
                     return redirect('detalle_pedido', mesa_numero=mesa.numero)
             else:  # Si la mesa ya está ocupada, redirige directamente a detalle_pedido
@@ -91,8 +80,9 @@ def detalle_pedido(request, mesa_numero):
             'MozCod': request.user,
             'PedFec': date.today(),
             'PedHor': timezone.now(),
+            'PedCli': request.POST.get('cliente'), #guardamos el pedido
             'PedTot': 0,
-            'PedObs': '',
+            'PedObs': request.POST.get('comentarios'),
             'EstPedCod': estado_en_proceso,  # Asignar el estado obtenido
         }
     )
@@ -108,6 +98,7 @@ def detalle_pedido(request, mesa_numero):
             try:
                 data = json.loads(request.body)
                 plato_id = data.get('plato_id')
+                comentarios_mesa = data.get('comentarios', '')  # Obtener los comentarios como una cadena de texto
                 cantidad = data.get('cantidad')
 
                 plato = Menu.objects.get(MenCod=plato_id)
@@ -125,6 +116,7 @@ def detalle_pedido(request, mesa_numero):
 
                 # Actualizar el total del pedido
                 pedido.PedTot = pedido.detalles.aggregate(Sum('PedSub'))['PedSub__sum'] or 0
+                pedido.PedObs = comentarios_mesa
                 pedido.save()
 
                 return JsonResponse({

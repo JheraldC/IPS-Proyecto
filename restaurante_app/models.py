@@ -67,6 +67,7 @@ class Pedido(models.Model):
     PedCod = models.AutoField(primary_key=True)
     MesCod = models.ForeignKey(Mesa, on_delete=models.CASCADE)
     MozCod = models.ForeignKey(Usuario, on_delete=models.CASCADE, limit_choices_to={'TipUsuCod__TipUsuDes': 'Mozo'})
+    PedCli = models.CharField(max_length=255, blank=True)  # Nombre del cliente
     PedFec = models.DateField()
     PedHor = models.TimeField()
     PedTot = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Inicializa el total en 0

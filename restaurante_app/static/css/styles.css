@@ -55,12 +55,9 @@ a {
 }
 
 h2 {
-  text-align: left;
-  /* Alineación a la izquierda */
+  text-align: center;
   margin-bottom: 10px;
-  /* Espacio inferior */
   border-bottom: 1px solid #ddd;
-  /* Línea divisoria */
   padding-bottom: 10px;
 }
 
