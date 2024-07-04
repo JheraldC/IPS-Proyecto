@@ -31,6 +31,33 @@ document.addEventListener('DOMContentLoaded', (event) => {
     });
   });
 
+  // Manejar clics en los botones "Eliminar"
+  document.addEventListener('click', (event) => {
+    if (event.target.classList.contains('eliminar-plato')) {
+      const listItem = event.target.closest('.pedido-item');
+      const platoId = listItem.dataset.detalleId;
+
+      // Eliminar el plato del pedido en memoria
+      delete pedido[platoId];
+
+      // Eliminar el elemento de la lista del DOM
+      listItem.remove();
+
+      // Actualizar el total del pedido
+      actualizarPedido();
+
+      // Reiniciar la cantidad en el contenedor .cantidad-container del plato correspondiente
+      const menuItem = document.querySelector(`.menu-item[data-plato-id="${platoId}"]`);
+      if (menuItem) {
+        const cantidadSpan = menuItem.querySelector('.cantidad');
+        cantidadSpan.textContent = 0;
+      }
+
+      // Enviar solicitud AJAX para eliminar el plato del pedido en el backend (opcional)
+      // ...
+    }
+  });
+
   // Manejar clics en los botones "+" y "-" de la lista de platos
   document.querySelector('.menu-items').addEventListener('click', (event) => {
     if (event.target.matches('.btn-cantidad')) {
