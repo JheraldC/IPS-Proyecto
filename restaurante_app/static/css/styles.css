@@ -25,6 +25,7 @@ a {
 
 .columna {
   width: 50%;
+  min-height: 8rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -354,8 +355,8 @@ i:hover {
 
 .menu-items {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  /* Cuadrícula responsiva */
+  grid-template-columns: repeat(auto-fit, minmax(1fr));
+  grid-auto-flow: column; /* Colocar elementos en filas */
   gap: 20px;
 }
 
@@ -370,44 +371,6 @@ i:hover {
   height: auto;
   margin-bottom: 10px;
   border-radius: 5px;
-}
-
-/* Estilos para los botones de cantidad */
-.btn-cantidad {
-  background-color: #f0f0f0;
-  color: #333;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s ease;
-}
-
-.btn-cantidad:hover {
-  background-color: #ddd;
-}
-
-#pedido-resumen {
-  margin-top: 30px;
-  border-top: 1px solid #ddd;
-  padding-top: 20px;
-}
-
-#pedido-resumen ul {
-  list-style: none;
-  padding: 0;
-}
-
-#finalizar-venta {
-  background-color: #4CAF50;
-  /* Verde */
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 20px;
 }
 
 /* Estilos para los botones de categoría */
@@ -427,4 +390,104 @@ i:hover {
   background-color: brown;
   /* Color azul para activo/hover */
   color: white;
+}
+
+/* Estilos para el resumen del pedido */
+#pedido-resumen {
+  background-color: #fff;
+  /* Fondo blanco */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  /* Sombra sutil */
+  margin-bottom: 20px;
+  /* Espacio inferior */
+}
+
+#pedido-resumen h3 {
+  margin-bottom: 15px;
+}
+
+#lista-pedido {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  padding: 0;
+}
+
+.pedido-item {
+  display: grid;
+  /* Usamos grid para la disposición en columnas */
+  grid-template-columns: 3fr 1fr 1fr 1fr;
+  /* 3 columnas para nombre, 1 para cantidad, 1 para precio, 1 para eliminar */
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.pedido-item-nombre {
+  text-align: left;
+  /* Alineamos el nombre del plato a la izquierda */
+}
+
+.pedido-item-cantidad {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-cantidad {
+  background-color: #f0f0f0;
+  color: #333;
+  border: none;
+  width: 30px;
+  /* Ancho fijo para los botones */
+  height: 30px;
+  /* Alto fijo para los botones */
+  border-radius: 50%;
+  /* Botones redondos */
+  cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-cantidad:hover {
+  background-color: #ddd;
+}
+
+.cantidad {
+  margin: 0 10px;
+  font-weight: bold;
+}
+
+.pedido-item-precio {
+  text-align: right;
+  /* Alineamos el precio a la derecha */
+}
+
+.eliminar-plato {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #dc3545;
+  /* Rojo para el botón de eliminar */
+}
+
+/* Estilos para el botón "Finalizar Venta" */
+#finalizar-venta {
+  background-color: #28a745;
+  /* Verde */
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 70%;
+  /* Ancho completo */
 }
