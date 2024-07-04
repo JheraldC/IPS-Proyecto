@@ -31,24 +31,65 @@ document.addEventListener('DOMContentLoaded', (event) => {
     });
   });
 
-  // Manejar clics en los botones "+" y "-"
-  document.addEventListener('click', (event) => {
-    if (event.target.classList.contains('btn-cantidad')) {
-      const menuItemId = event.target.closest('.menu-item').dataset.platoId;
-      const action = event.target.dataset.action;
-      const cantidadSpan = event.target.closest('.cantidad-container').querySelector('.cantidad');
-      let cantidad = parseInt(cantidadSpan.textContent);
+  // Manejar clics en los botones "+" y "-" de la lista de platos
+  document.querySelector('.menu-items').addEventListener('click', (event) => {
+    if (event.target.matches('.btn-cantidad')) {
+      const menuItem = event.target.closest('.menu-item');
 
-      if (action === 'sumar') {
-        cantidad++;
-      } else if (action === 'restar' && cantidad > 0) {
-        cantidad--;
+      if (menuItem !== null) {  // Verificar si menuItem existe
+        const platoId = menuItem.dataset.platoId;
+        const action = event.target.dataset.action;
+        const cantidadSpan = menuItem.querySelector('.cantidad');
+        let cantidad = parseInt(cantidadSpan.textContent);
+
+        if (action === 'sumar') {
+          cantidad++;
+        } else if (action === 'restar' && cantidad > 0) {
+          cantidad--;
+        }
+
+        cantidadSpan.textContent = cantidad;
+        pedido[platoId] = cantidad; // Actualizar el pedido en memoria
+
+        actualizarPedido();
       }
+    }
+  });
 
-      cantidadSpan.textContent = cantidad;
-      pedido[menuItemId] = cantidad; // Actualiza el pedido en memoria
+  // Manejar clics en los botones "+" y "-" dentro de la lista de pedido
+  pedidoItems.addEventListener('click', (event) => {
+    if (event.target.classList.contains('btn-cantidad')) {
+      const listItem = event.target.closest('.pedido-item');
 
-      actualizarPedido();
+      if (listItem) {
+        const detalleId = listItem.dataset.detalleId;
+        const action = event.target.dataset.action;
+        const cantidadSpanPedido = listItem.querySelector('.cantidad');
+        const precioSpan = listItem.querySelector('.pedido-item-precio');
+        let cantidad = parseInt(cantidadSpanPedido.textContent);
+        const precioUnitario = parseFloat(precioSpan.textContent.replace('S/', ''));
+
+        if (action === 'sumar') {
+          cantidad++;
+        } else if (action === 'restar' && cantidad > 0) {
+          cantidad--;
+        }
+
+        cantidadSpanPedido.textContent = cantidad;
+        precioSpan.textContent = `S/${(precioUnitario * cantidad).toFixed(2)}`;
+
+        // Actualiza la cantidad en el objeto 'pedido'
+        pedido[detalleId] = cantidad;
+
+        // Actualiza la cantidad en el elemento del menú correspondiente
+        const menuItem = document.querySelector(`.menu-item[data-plato-id="${detalleId}"]`);
+        if (menuItem) {
+          const cantidadSpanMenu = menuItem.querySelector('.cantidad');
+          cantidadSpanMenu.textContent = cantidad;
+        }
+
+        actualizarPedido();
+      }
     }
   });
 
@@ -105,4 +146,3 @@ document.addEventListener('DOMContentLoaded', (event) => {
       });
   });
 });
-
