@@ -39,6 +39,18 @@ def index(request):
     return render(request, 'index.html')
 
 @login_required
+def pedidos(request):
+    pedidos_cancelados = Pedido.objects.filter(EstPedCod__EstPedDes='cancelado')
+    pedidos_en_proceso = Pedido.objects.filter(EstPedCod__EstPedDes='enproceso')
+    pedidos_finalizados = Pedido.objects.filter(EstPedCod__EstPedDes='finalizado')
+
+    return render(request, 'pedidos.html', {
+        'pedidos_cancelados': pedidos_cancelados,
+        'pedidos_en_proceso': pedidos_en_proceso,
+        'pedidos_finalizados': pedidos_finalizados,
+    })
+
+@login_required
 def mesas_view(request):
     mesas = Mesa.objects.all()
     mozos = Usuario.objects.filter(TipUsuCod__TipUsuDes="Mozo")

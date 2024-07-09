@@ -516,3 +516,44 @@ i:hover {
   width: 70%;
   /* Ancho completo */
 }
+
+/* Contenedor principal de los pedidos */
+.pedidos-container {
+    display: flex;
+    justify-content: space-around; /* Distribuye las columnas uniformemente */
+    gap: 20px; /* Espacio entre columnas */
+}
+
+/* Columnas individuales de pedidos */
+.pedido-column {
+    flex: 1; /* Cada columna ocupa el mismo espacio */
+    border: 1px solid #ddd; /* Borde gris claro */
+    padding: 20px;
+    border-radius: 8px;
+    min-height: 300px; /* Altura mínima para las columnas */
+}
+
+/* Estilos para los títulos de las columnas */
+.pedido-column h3 {
+    margin-bottom: 15px;
+}
+
+/* Puntos de colores para los estados */
+.dot {
+    height: 15px;
+    width: 15px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.red { background-color: #f44336; } /* Rojo */
+.blue { background-color: #2196F3; } /* Azul */
+.green { background-color: #4CAF50; } /* Verde */
+
+/* Listas de pedidos */
+ul {
+    list-style: none;
+    padding: 0;
+}
+

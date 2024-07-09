@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Pedidos{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2>Pedidos</h2>
+
+  <div class="pedidos-container">
+    <div class="pedido-column" id="cancelados">
+      <h3><span class="dot red"></span> Cancelados (<span id="num-cancelados">0</span>)</h3>
+      <ul id="lista-cancelados">
+        </ul>
+    </div>
+
+    <div class="pedido-column" id="enproceso">
+      <h3><span class="dot blue"></span> En proceso (<span id="num-enproceso">0</span>)</h3>
+      <ul id="lista-enproceso">
+        </ul>
+    </div>
+
+    <div class="pedido-column" id="finalizados">
+      <h3><span class="dot green"></span> Finalizados (<span id="num-finalizados">0</span>)</h3>
+      <ul id="lista-finalizados">
+        </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
