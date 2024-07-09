@@ -10,7 +10,7 @@
     <div class="mesa-grid">
       {% for mesa in mesas %}
       <a href="{% url 'mesas' %}?mesa_numero={{ mesa.numero }}"
-        class="mesa {% if mesa.EstMesCod.EstMesDes == 'ocupada' %}ocupada{% endif %}">
+        class="mesa {% if mesa.EstMesCod.EstMesDes == 'ocupado' %}ocupada{% endif %}">
         {{ mesa.numero }}
       </a>
       {% endfor %}

@@ -52,9 +52,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const cantidadSpan = menuItem.querySelector('.cantidad');
         cantidadSpan.textContent = 0;
       }
-
-      // Enviar solicitud AJAX para eliminar el plato del pedido en el backend (opcional)
-      // ...
     }
   });
 
@@ -159,14 +156,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
         'X-CSRFToken': csrfToken,
         'X-Requested-With': 'XMLHttpRequest'
       },
-      body: JSON.stringify({ platos: pedido })
+      body: JSON.stringify({ platos: pedido, finalizar_venta: true })
     })
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          // Redirigir a la página de éxito o mostrar un mensaje
-          alert('Pedido realizado con éxito');
-          // Puedes agregar aquí lógica para actualizar la interfaz o redirigir a otra página
+          window.location.href = data.redirect_url;
         } else {
           alert('Error al realizar el pedido: ' + data.error);
         }
