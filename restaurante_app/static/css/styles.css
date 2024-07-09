@@ -108,6 +108,30 @@ h2 {
   background: #0056b3;
 }
 
+/* ... (tus otros estilos CSS) ... */
+
+.alert.alert-warning {
+  /* Estilo específico para alertas de advertencia */
+  background-color: #f0f0f0;
+  /* Fondo gris claro */
+  color: #dc3545;
+  /* Color rojo para el texto */
+  border: 1px solid #dc3545;
+  /* Borde rojo */
+  padding: 15px;
+  /* Espaciado interno */
+  margin-bottom: 20px;
+  /* Margen inferior */
+  border-radius: 8px;
+  /* Bordes redondeados */
+  text-align: center;
+  /* Texto centrado */
+  font-weight: bold;
+  /* Texto en negrita */
+}
+
+
+
 .alert-danger {
   color: #721c24;
   background-color: #f8d7da;
@@ -356,7 +380,8 @@ i:hover {
 .menu-items {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(1fr));
-  grid-auto-flow: column; /* Colocar elementos en filas */
+  grid-auto-flow: column;
+  /* Colocar elementos en filas */
   gap: 20px;
 }
 

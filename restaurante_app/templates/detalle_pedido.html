@@ -5,7 +5,7 @@
 
 {% block content %}
 
-<div class="container" data-mesa-numero="{{ mesa_seleccionada.numero }}">
+<div class="container" data-mesa-numero="{{ mesa.numero }}">
   <h2>Mesa {{ mesa.numero }}</h2>
 
   <div class="flex">
@@ -38,6 +38,7 @@
 
     </div>
 
+    {% csrf_token %}
     <div class="columna">
       <div id="pedido-resumen columna">
         <h3>Resumen del Pedido:</h3>
@@ -46,7 +47,7 @@
         <p>Total: S/<span id="total-amount">0.00</span></p>
       </div>
 
-      <button id="finalizar-venta" onclick="finalizarVenta()">Finalizar Venta</button>
+      <button id="finalizar-venta">Finalizar Venta</button>
     </div>
   </div>
 

@@ -10,7 +10,7 @@
     <div class="mesa-grid">
       {% for mesa in mesas %}
       <a href="{% url 'mesas' %}?mesa_numero={{ mesa.numero }}"
-        class="mesa {% if mesa.EstMesCod.EstMesDes == 'ocupado' %}ocupada{% endif %}">
+        class="mesa {% if mesa.EstMesCod.EstMesDes == 'ocupado' and mesa.tiene_pedido %}ocupada{% endif %}">
         {{ mesa.numero }}
       </a>
       {% endfor %}
@@ -21,13 +21,28 @@
   </div>
 
   <div id="detalle-mesa">
-    <h2>{% if mesa_seleccionada %}Mesa {{ mesa_seleccionada.numero }}{% else %}Selecciona una mesa{% endif %}</h2>
-    {% if mesa_seleccionada and form %}
+    <h2>
+      {% if mesa_seleccionada %}
+      Mesa {{ mesa_seleccionada.numero }}
+      {% else %}
+      Selecciona una mesa
+      {% endif %}
+    </h2>
+
+    {% if mesa_seleccionada %}
+    {% if mensaje %}
+    <div class="alert alert-warning">
+      <i class="bi bi-exclamation-triangle-fill"></i> La mesa ya está ocupada.
+    </div>
+    {% else %}
+    {% if form %}
     <form method="POST" action="{% url 'detalle_pedido' mesa_seleccionada.numero %}">
       {% csrf_token %}
       {{ form }}
       <button type="submit" class="btn btn-primary">Abrir Mesa</button>
     </form>
+    {% endif %}
+    {% endif %}
     {% endif %}
   </div>
 </div>

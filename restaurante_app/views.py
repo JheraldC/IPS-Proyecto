@@ -9,6 +9,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
+from django.urls import reverse
 from django.utils import timezone
 from datetime import date
 from django.http import JsonResponse
@@ -48,8 +49,7 @@ def mesas_view(request):
         mesa_numero = request.POST.get('numero')  # Obtén el número de mesa del formulario
         if mesa_numero:
             mesa_seleccionada = get_object_or_404(Mesa, numero=mesa_numero)
-
-            if mesa_seleccionada.EstMesCod.EstMesDes == 'libre':
+            if mesa_seleccionada.EstMesCod.EstMesDes == 'disponible':
                 form = AbrirMesaForm(request.POST, instance=mesa_seleccionada)  # Pasa la instancia de mesa al formulario
                 if form.is_valid():
                     mesa = form.save(commit=False)
@@ -58,13 +58,26 @@ def mesas_view(request):
 
                     return redirect('detalle_pedido', mesa_numero=mesa.numero)
             else:  # Si la mesa ya está ocupada, redirige directamente a detalle_pedido
-                return redirect('detalle_pedido', mesa_numero=mesa_numero)
-
+                mensaje_ocupada = "La mesa ya está ocupada."
+                return render(request, 'mesas.html', {
+                    'mesas': mesas,
+                    'mesa_seleccionada': mesa_seleccionada,
+                    'mozos': mozos,
+                    'form': form,
+                    'mensaje': mensaje_ocupada,
+                })
     else:  # Si es GET, verifica si se pasó un número de mesa en la URL
         mesa_numero = request.GET.get('mesa_numero')
         if mesa_numero:
             mesa_seleccionada = get_object_or_404(Mesa, numero=mesa_numero)
             form = AbrirMesaForm(initial={'numero': mesa_numero, 'mozo': request.user})  # Preselecciona el mozo actual
+
+    for mesa in mesas:
+        mesa.tiene_pedido = (
+            Pedido.objects.filter(MesCod=mesa).exists() and
+            PedidoDetalle.objects.filter(PedCod__MesCod=mesa).exists()
+        )
+
 
     return render(request, 'mesas.html', {
         'mesas': mesas,
@@ -76,6 +89,9 @@ def mesas_view(request):
 @login_required
 def detalle_pedido(request, mesa_numero):
     mesa = get_object_or_404(Mesa, numero=mesa_numero)
+    if mesa.EstMesCod.EstMesDes == 'ocupado':
+        # Si está ocupada, redirige a la vista de mesas
+        return redirect('mesas')
 
     # Obtener o crear el estado "En proceso"
     estado_en_proceso, _ = EstadoPedido.objects.get_or_create(EstPedDes='enproceso')
@@ -105,27 +121,27 @@ def detalle_pedido(request, mesa_numero):
             try:
                 data = json.loads(request.body)
                 plato_id = data.get('plato_id')
-                comentarios_mesa = data.get('comentarios', '')  # Obtener los comentarios como una cadena de texto
                 cantidad = data.get('cantidad')
                 finalizar_venta = data.get('finalizar_venta')
 
                 if finalizar_venta:
-                    # 1. Actualizamos el pedido con comentarios (si los hay)
-                    pedido.PedObs = data.get('comentarios', '')
-                    pedido.save()
-                
-                    # 2. Creamos los PedidoDetalle
+                    # 1. Creamos los PedidoDetalle
                     for plato_id, cantidad in data.get('platos', {}).items():
                         if cantidad > 0:
                             plato = Menu.objects.get(MenCod=plato_id)
-                            PedidoDetalle.objects.create(
+                            detalle, created = PedidoDetalle.objects.update_or_create(
                                 PedCod=pedido,
                                 MenCod=plato,
                                 PedCan=cantidad,
-                                PedSub=plato.precio * cantidad
+                                PedSub=plato.precio * cantidad,
                             )
-                
-                    # 3. Redirigimos a la vista de generar_ticket
+                            if created:
+                                # Cambiar el estado de la mesa a "ocupada"
+                                mesa.EstMesCod = EstadoMesa.objects.get(EstMesDes='ocupado')
+                                mesa.save()
+                    # 2. Redirigimos a la vista de generar_ticket
+                    pedido.PedTot = pedido.detalles.aggregate(Sum('PedSub'))['PedSub__sum'] or 0
+                    pedido.save()
                     return JsonResponse({
                         'success': True,
                         'pedido_id': pedido.PedCod,  # Incluimos el ID del pedido
@@ -146,9 +162,6 @@ def detalle_pedido(request, mesa_numero):
                     detalle.save()
 
                  # Actualizar el total del pedido
-                    pedido.PedTot = pedido.detalles.aggregate(Sum('PedSub'))['PedSub__sum'] or 0
-                    pedido.PedObs = comentarios_mesa
-                    pedido.save()
 
                     return JsonResponse({
                         'success': True, 

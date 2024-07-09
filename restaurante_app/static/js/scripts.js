@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', (event) => {
   const mesaNumero = document.querySelector('.container').dataset.mesaNumero;
-  const csrfToken = "{{ csrf_token }}";
+
 
   const menuItems = document.querySelectorAll('.menu-item');
   const pedidoItems = document.getElementById('lista-pedido');
@@ -36,16 +36,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
     if (event.target.classList.contains('eliminar-plato')) {
       const listItem = event.target.closest('.pedido-item');
       const platoId = listItem.dataset.detalleId;
-
       // Eliminar el plato del pedido en memoria
       delete pedido[platoId];
-
       // Eliminar el elemento de la lista del DOM
       listItem.remove();
-
       // Actualizar el total del pedido
       actualizarPedido();
-
       // Reiniciar la cantidad en el contenedor .cantidad-container del plato correspondiente
       const menuItem = document.querySelector(`.menu-item[data-plato-id="${platoId}"]`);
       if (menuItem) {
@@ -149,6 +145,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
   // Enviar el pedido al servidor (AJAX)
   finalizarVentaButton.addEventListener('click', () => {
+    const csrfTokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    const csrfToken = csrfTokenInput.value;
     fetch(`/mesas/${mesaNumero}/detalle-pedido/`, {
       method: 'POST',
       headers: {

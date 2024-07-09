@@ -71,7 +71,7 @@ class Pedido(models.Model):
     PedFec = models.DateField()
     PedHor = models.TimeField()
     PedTot = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Inicializa el total en 0
-    PedObs = models.TextField(blank=True)  # Permite observaciones vacías
+    PedObs = models.TextField(blank=True, default="")  # Valor predeterminado vacío
     EstPedCod = models.ForeignKey(EstadoPedido, on_delete=models.CASCADE)
 
     def __str__(self):
