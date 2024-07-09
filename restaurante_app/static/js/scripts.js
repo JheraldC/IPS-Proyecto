@@ -165,4 +165,30 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
       });
   });
+
+  // En tu código JavaScript, dentro del `DOMContentLoaded`:
+
+  function llenarListaPedidos(listaId, pedidos) {
+    const lista = document.getElementById(listaId);
+    lista.innerHTML = ''; // Limpiar la lista
+
+    if (pedidos.length === 0) {
+      const mensajeVacio = document.createElement('li');
+      mensajeVacio.textContent = 'No hay pedidos en esta sección.';
+      lista.appendChild(mensajeVacio);
+      return;
+    }
+
+    pedidos.forEach(pedido => {
+      const listItem = document.createElement('li');
+      listItem.textContent = `Pedido ${pedido.PedCod} - Mesa ${pedido.MesCod_id}`;
+      lista.appendChild(listItem);
+    });
+  }
+
+  llenarListaPedidos('lista-cancelados', window.pedidos_cancelados);
+  llenarListaPedidos('lista-enproceso', window.pedidos_en_proceso);
+  llenarListaPedidos('lista-finalizados', window.pedidos_finalizados);
+
+
 });

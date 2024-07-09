@@ -40,9 +40,9 @@ def index(request):
 
 @login_required
 def pedidos(request):
-    pedidos_cancelados = Pedido.objects.filter(EstPedCod__EstPedDes='cancelado')
-    pedidos_en_proceso = Pedido.objects.filter(EstPedCod__EstPedDes='enproceso')
-    pedidos_finalizados = Pedido.objects.filter(EstPedCod__EstPedDes='finalizado')
+    pedidos_cancelados = list(Pedido.objects.filter(EstPedCod__EstPedDes='cancelado').values())  # Convertir a lista de diccionarios
+    pedidos_en_proceso = list(Pedido.objects.filter(EstPedCod__EstPedDes='enproceso').values())  # Convertir a lista de diccionarios
+    pedidos_finalizados = list(Pedido.objects.filter(EstPedCod__EstPedDes='finalizado').values())  # Convertir a lista de diccionarios
 
     return render(request, 'pedidos.html', {
         'pedidos_cancelados': pedidos_cancelados,
