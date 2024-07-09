@@ -69,7 +69,14 @@ def mesas_view(request):
                     mesa.save()
 
                     return redirect('detalle_pedido', mesa_numero=mesa.numero)
-            else:  # Si la mesa ya está ocupada, redirige directamente a detalle_pedido
+
+    else:  # Si es GET, verifica si se pasó un número de mesa en la URL
+        mesa_numero = request.GET.get('mesa_numero')
+        if mesa_numero:
+            mesa_seleccionada = get_object_or_404(Mesa, numero=mesa_numero)
+            form = AbrirMesaForm(initial={'numero': mesa_numero, 'mozo': request.user})  # Preselecciona el mozo actual
+            if mesa_seleccionada.EstMesCod.EstMesDes == 'ocupado':
+                # Si la mesa está ocupada, muestra un mensaje
                 mensaje_ocupada = "La mesa ya está ocupada."
                 return render(request, 'mesas.html', {
                     'mesas': mesas,
@@ -78,11 +85,6 @@ def mesas_view(request):
                     'form': form,
                     'mensaje': mensaje_ocupada,
                 })
-    else:  # Si es GET, verifica si se pasó un número de mesa en la URL
-        mesa_numero = request.GET.get('mesa_numero')
-        if mesa_numero:
-            mesa_seleccionada = get_object_or_404(Mesa, numero=mesa_numero)
-            form = AbrirMesaForm(initial={'numero': mesa_numero, 'mozo': request.user})  # Preselecciona el mozo actual
 
     for mesa in mesas:
         mesa.tiene_pedido = (
