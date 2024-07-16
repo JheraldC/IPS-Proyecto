@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
   const totalAmount = document.getElementById('total-amount');
   const finalizarVentaButton = document.getElementById('finalizar-venta');
   const categoriaBtns = document.querySelectorAll('.categoria-btn');
+  const limpiarMesaButton = document.getElementById('limpiar-mesa');
 
   let pedido = {};
 
@@ -94,6 +95,28 @@ document.addEventListener('DOMContentLoaded', (event) => {
       });
     }
   }
+  // Manejar clic en el botón "Limpiar"
+  limpiarMesaButton.addEventListener('click', function(event) {
+    const csrfTokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    const csrfToken = csrfTokenInput.value;
+    const mesaId = event.target.dataset.mesaId;
+
+    fetch(`/limpiar_mesa/${mesaId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          location.reload(); // Recargar la página para reflejar los cambios
+        } else {
+          alert('Error al limpiar la mesa: ' + data.error);
+        }
+      });
+  });
+
 
   document.addEventListener('click', function(event) {
     const csrfTokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');

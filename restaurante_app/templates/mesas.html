@@ -10,7 +10,7 @@
     <div class="mesa-grid">
       {% for mesa in mesas %}
       <a href="{% url 'mesas' %}?mesa_numero={{ mesa.numero }}"
-        class="mesa {% if mesa.EstMesCod.EstMesDes == 'ocupado' or mesa_seleccionada.EstMesCod.EstMesDes == 'ocupado' and mesa.tiene_pedido %}ocupada{% endif %}">
+        class="mesa{% if mesa.EstMesCod.EstMesDes == 'ocupado' and mesa.tiene_pedido %} ocupada{% elif mesa.EstMesCod.EstMesDes == 'sucio' %} sucio{% endif %}">
         {{ mesa.numero }}
       </a>
       {% endfor %}
@@ -34,6 +34,12 @@
     <div class="alert alert-warning">
       <i class="bi bi-exclamation-triangle-fill"></i> La mesa ya está ocupada.
     </div>
+    {% elif mensaje_sucio %}
+    <div class="alert alert-warning">
+      <i class="bi bi-exclamation-triangle-fill"></i> La mesa está sucia.
+    </div>
+    {% csrf_token %}
+    <button id="limpiar-mesa" data-mesa-id="{{ mesa_seleccionada.numero }}">Limpiar</button>
     {% else %}
     {% if form %}
     <form method="POST" action="{% url 'detalle_pedido' mesa_seleccionada.numero %}">

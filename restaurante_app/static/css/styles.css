@@ -285,6 +285,14 @@ i:hover {
   background-color: #d32f2f;
 }
 
+.mesa.sucio {
+  background-color: blue;
+}
+
+.mesa.sucio:hover {
+  background-color: blueviolet;
+}
+
 .mesas-section {
   flex: 1;
   max-width: 70%;

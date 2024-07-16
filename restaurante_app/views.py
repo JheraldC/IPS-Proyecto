@@ -68,10 +68,25 @@ def actualizar_estado_pedido(request, pedido_id):
         try:
             pedido = Pedido.objects.get(pk=pedido_id)
             pedido.EstPedCod_id = 3  # Cambiar el estado a "Finalizado"
+            mesa = pedido.MesCod
+            mesa.EstMesCod = EstadoMesa.objects.get(EstMesDes='sucio')
             pedido.save()
+            mesa.save()
             return JsonResponse({'success': True, 'pedido_id': pedido_id})
         except Pedido.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Pedido no encontrado'})
+    else:
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+def limpiar_mesa(request, mesa_id):
+    if request.method == 'POST':
+        try:
+            mesa = Mesa.objects.get(pk=mesa_id)
+            mesa.EstMesCod = EstadoMesa.objects.get(EstMesDes='disponible')
+            mesa.save()
+            return JsonResponse({'success': True})
+        except Mesa.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Mesa no encontrada'})
     else:
         return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
@@ -126,6 +141,16 @@ def mesas_view(request):
                     'form': form,
                     'mensaje': mensaje_ocupada,
                 })
+            elif mesa_seleccionada.EstMesCod.EstMesDes == 'sucio':
+                mensaje_sucia = "La mesa está sucia."
+                return render(request, 'mesas.html', {
+                    'mesas': mesas,
+                    'mesa_seleccionada': mesa_seleccionada,
+                    'mozos': mozos,
+                    'form': form,
+                    'mensaje_sucio': mensaje_sucia,
+                })
+
 
     for mesa in mesas:
         mesa.tiene_pedido = (
