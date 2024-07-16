@@ -63,6 +63,34 @@ def pedidos_view(request):
         'pedidos_finalizados': pedidos_finalizados_json,
     })
 
+def actualizar_estado_pedido(request, pedido_id):
+    if request.method == 'POST':
+        try:
+            pedido = Pedido.objects.get(pk=pedido_id)
+            pedido.EstPedCod_id = 3  # Cambiar el estado a "Finalizado"
+            pedido.save()
+            return JsonResponse({'success': True, 'pedido_id': pedido_id})
+        except Pedido.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Pedido no encontrado'})
+    else:
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+def obtener_pedidos_json(request):
+    pedidos_cancelados = list(Pedido.objects.filter(EstPedCod_id=1).prefetch_related('detalles').values())
+    pedidos_en_proceso = list(Pedido.objects.filter(EstPedCod_id=2).prefetch_related('detalles').values())
+    pedidos_finalizados = list(Pedido.objects.filter(EstPedCod_id=3).prefetch_related('detalles').values())
+
+    # Asegurar que 'DetPed' sea una lista, incluso si está vacía
+    for pedidos in [pedidos_cancelados, pedidos_en_proceso, pedidos_finalizados]:
+        for pedido in pedidos:
+            pedido['DetPed'] = list(pedido.get('detalles', []))
+
+    return JsonResponse({
+        'pedidos_cancelados': pedidos_cancelados,
+        'pedidos_en_proceso': pedidos_en_proceso,
+        'pedidos_finalizados': pedidos_finalizados
+    }, encoder=DjangoJSONEncoder, safe=False)
+
 @login_required
 def mesas_view(request):
     mesas = Mesa.objects.all()

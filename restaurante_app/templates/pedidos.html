@@ -35,5 +35,5 @@
 <script id="pedidos_finalizados" type="application/json">
     {{ pedidos_finalizados|safe }}
 </script>
-
+{% csrf_token %}
 {% endblock %}

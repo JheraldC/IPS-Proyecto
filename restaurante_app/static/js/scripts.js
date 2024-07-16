@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
   // Llenar las listas de pedidos (con verificación de array)
   function llenarListaPedidos(listaId, pedidos) {
     const lista = document.getElementById(listaId);
-    lista.innerHTML = '';
+    lista.innerHTML = ''; // Limpiar la lista
 
     if (!Array.isArray(pedidos) || pedidos.length === 0) {
       const mensajeVacio = document.createElement('li');
@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
       pedidosFiltrados.forEach(pedido => {
         const listItem = document.createElement('li');
         listItem.classList.add('pedido-item');
+        listItem.dataset.pedidoId = pedido.PedCod; // Agregar un atributo para identificar el pedido
 
         // Detalles del pedido (Mesa, Observaciones, Total.mesa)
         const mesaDiv = document.createElement('div');
@@ -52,9 +53,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
         observacionesDiv.classList.add('observaciones');
         observacionesDiv.textContent = `Observaciones: ${pedido.PedObs || ''}`;
 
+        const totalDiv = document.createElement('div');
+        totalDiv.classList.add('total');
+        totalDiv.textContent = `Total: S/. ${pedido.PedTot}`;
+
         listItem.appendChild(mesaDiv);
         listItem.appendChild(observacionesDiv);
-
+        listItem.appendChild(totalDiv);
 
         // Lista de detalles del pedido (si existen)
         const detallesList = document.createElement('ul');
@@ -75,17 +80,63 @@ document.addEventListener('DOMContentLoaded', (event) => {
           detallesList.appendChild(detalleItem);
         });
         listItem.appendChild(detallesList);
+
+        // Agregar botón "Siguiente" solo si el pedido está en proceso
+        if (listaId === 'lista-enproceso') {
+          const siguienteButton = document.createElement('button');
+          siguienteButton.textContent = 'Siguiente';
+          siguienteButton.classList.add('siguiente-btn');
+          siguienteButton.dataset.pedidoId = pedido.PedCod;
+          listItem.appendChild(siguienteButton);
+        }
+
         lista.appendChild(listItem);
-        // Agregar botón "Siguiente"
-        const siguienteButton = document.createElement('button');
-        siguienteButton.textContent = 'Siguiente';
-        siguienteButton.classList.add('siguiente-btn'); // Agregar una clase para estilos
-        siguienteButton.dataset.pedidoId = pedido.PedCod; // Agregar un atributo para identificar el pedido
-        listItem.appendChild(siguienteButton);
       });
     }
   }
 
+  document.addEventListener('click', function(event) {
+    const csrfTokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    const csrfToken = csrfTokenInput.value;
+    if (event.target.classList.contains('siguiente-btn')) {
+      const pedidoId = event.target.dataset.pedidoId;
+      fetch(`/actualizar_estado_pedido/${pedidoId}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken,
+        }
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            location.reload();
+          } else {
+            alert('Error al actualizar el estado del pedido: ' + data.error);
+          }
+        });
+    }
+  });
+
+  // Manejar clics en los botones "Eliminar"
+  document.addEventListener('click', (event) => {
+    if (event.target.classList.contains('eliminar-plato')) {
+      const listItem = event.target.closest('.pedido-item');
+      const platoId = listItem.dataset.detalleId;
+      // Eliminar el plato del pedido en memoria
+      delete pedido[platoId];
+      // Eliminar el elemento de la lista del DOM
+      listItem.remove();
+      // Actualizar el total del pedido
+      actualizarPedido();
+      // Reiniciar la cantidad en el contenedor .cantidad-container del plato correspondiente
+      const menuItem = document.querySelector(`.menu-item[data-plato-id="${platoId}"]`);
+      if (menuItem) {
+        const cantidadSpan = menuItem.querySelector('.cantidad');
+        cantidadSpan.textContent = 0;
+      }
+    }
+  });
 
   // Función para actualizar los contadores
   function actualizarContadores() {
@@ -124,25 +175,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     });
   });
 
-  // Manejar clics en los botones "Eliminar"
-  document.addEventListener('click', (event) => {
-    if (event.target.classList.contains('eliminar-plato')) {
-      const listItem = event.target.closest('.pedido-item');
-      const platoId = listItem.dataset.detalleId;
-      // Eliminar el plato del pedido en memoria
-      delete pedido[platoId];
-      // Eliminar el elemento de la lista del DOM
-      listItem.remove();
-      // Actualizar el total del pedido
-      actualizarPedido();
-      // Reiniciar la cantidad en el contenedor .cantidad-container del plato correspondiente
-      const menuItem = document.querySelector(`.menu-item[data-plato-id="${platoId}"]`);
-      if (menuItem) {
-        const cantidadSpan = menuItem.querySelector('.cantidad');
-        cantidadSpan.textContent = 0;
-      }
-    }
-  });
 
   // Manejar clics en los botones "+" y "-" de la lista de platos
   document.querySelector('.menu-items').addEventListener('click', (event) => {
@@ -208,18 +240,20 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
   // Actualizar el total del pedido
   function actualizarPedido() {
-    pedidoItems.innerHTML = ''; // Limpiar la lista antes de actualizar
-    let total = 0;
+    const pedidoItems = document.getElementById('lista-pedido'); // Obtén el elemento nuevamente
+    if (pedidoItems) { // Verifica si existe
+      pedidoItems.innerHTML = ''; // Limpiar la lista antes de actualizar
+      let total = 0;
 
-    for (const platoId in pedido) {
-      const cantidad = pedido[platoId];
-      if (cantidad > 0) { // Solo agregar si la cantidad es mayor a 0
-        const plato = platos.find(p => p.pk == platoId);
-        const listItem = document.createElement('li');
-        listItem.classList.add('pedido-item');
-        listItem.dataset.detalleId = platoId; // Asigna el ID del plato al elemento de la lista
+      for (const platoId in pedido) {
+        const cantidad = pedido[platoId];
+        if (cantidad > 0) { // Solo agregar si la cantidad es mayor a 0
+          const plato = platos.find(p => p.pk == platoId);
+          const listItem = document.createElement('li');
+          listItem.classList.add('pedido-item');
+          listItem.dataset.detalleId = platoId; // Asigna el ID del plato al elemento de la lista
 
-        listItem.innerHTML = `
+          listItem.innerHTML = `
                     <div class="pedido-item-nombre">${plato.fields.MenDes}</div>
                     <div class="pedido-item-cantidad">
                         <button class="btn-cantidad" data-action="restar" data-plato-id="${platoId}">-</button>
@@ -229,11 +263,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
                     <div class="pedido-item-precio">S/${(plato.fields.precio * cantidad).toFixed(2)}</div>
                     <button class="eliminar-plato" data-plato-id="${platoId}">🗑️</button>
                 `;
-        pedidoItems.appendChild(listItem);
-        total += plato.fields.precio * cantidad;
+          pedidoItems.appendChild(listItem);
+          total += plato.fields.precio * cantidad;
+        }
       }
+      totalAmount.textContent = total.toFixed(2);
     }
-    totalAmount.textContent = total.toFixed(2);
   }
 
   // Enviar el pedido al servidor (AJAX)
@@ -258,4 +293,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
       });
   });
+
 });
+
