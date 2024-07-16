@@ -26,9 +26,14 @@
     </div>
   </div>
 </div>
-<script>
-  window.pedidos_cancelados = JSON.parse("{{ pedidos_cancelados|json_script:'pedidos_cancelados'|safe }}");
-  window.pedidos_en_proceso = JSON.parse("{{ pedidos_en_proceso|json_script:'pedidos_en_proceso'|safe }}");
-  window.pedidos_finalizados = JSON.parse("{{ pedidos_finalizados|json_script:'pedidos_finalizados'|safe }}");
+<script id="pedidos_cancelados" type="application/json">
+    {{ pedidos_cancelados|safe }}
 </script>
+<script id="pedidos_en_proceso" type="application/json">
+    {{ pedidos_en_proceso|safe }}
+</script>
+<script id="pedidos_finalizados" type="application/json">
+    {{ pedidos_finalizados|safe }}
+</script>
+
 {% endblock %}

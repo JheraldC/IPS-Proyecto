@@ -443,10 +443,6 @@ i:hover {
 }
 
 .pedido-item {
-  display: grid;
-  /* Usamos grid para la disposición en columnas */
-  grid-template-columns: 3fr 1fr 1fr 1fr;
-  /* 3 columnas para nombre, 1 para cantidad, 1 para precio, 1 para eliminar */
   align-items: center;
   gap: 10px;
   padding: 10px;
@@ -462,6 +458,12 @@ i:hover {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+#lista-enproceso,
+#lista-cancelados,
+#lista-finalizados {
+  padding: 0;
 }
 
 .btn-cantidad {
@@ -537,16 +539,13 @@ i:hover {
   padding: 20px;
   border-radius: 8px;
   min-height: 300px;
-  /* Altura mínima para las columnas */
 }
 
-/* Estilos para los títulos de las columnas */
 .pedido-column h3 {
   margin-bottom: 15px;
   font-size: 20px;
 }
 
-/* Puntos de colores para los estados */
 .dot {
   height: 15px;
   width: 15px;
@@ -559,20 +558,63 @@ i:hover {
   background-color: #f44336;
 }
 
-/* Rojo */
 .blue {
   background-color: #2196F3;
 }
 
-/* Azul */
 .green {
   background-color: #4CAF50;
 }
 
-/* Verde */
-
-/* Listas de pedidos */
 ul {
   list-style: none;
   padding: 0;
+}
+
+/* Estilos para cada pedido individual */
+.pedido-item {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+/* Estilos para los elementos dentro de cada pedido */
+.pedido-item>div {
+  margin-bottom: 10px;
+}
+
+.pedido-item .mesa-item {
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.pedido-item .observaciones {
+  color: #9e9e9e;
+}
+
+.pedido-item .cantidad {
+  text-align: right;
+}
+
+.pedido-item button {
+  background-color: white;
+  color: blue;
+  width: 100%;
+  margin-top: auto;
+  padding: 10px 20px;
+  border: 2px solid #e0e0e0;
+  border-radius: 2px;
+  cursor: pointer;
+  float: right;
+}
+
+.siguiente-btn {
+  background-color: #4CAF50;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
 }

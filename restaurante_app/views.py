@@ -1,12 +1,11 @@
 import json
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from reportlab.pdfgen import canvas
+from django.core.serializers.json import DjangoJSONEncoder
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
@@ -39,15 +38,29 @@ def index(request):
     return render(request, 'index.html')
 
 @login_required
-def pedidos(request):
-    pedidos_cancelados = list(Pedido.objects.filter(EstPedCod__EstPedDes='cancelado').values())  # Convertir a lista de diccionarios
-    pedidos_en_proceso = list(Pedido.objects.filter(EstPedCod__EstPedDes='enproceso').values())  # Convertir a lista de diccionarios
-    pedidos_finalizados = list(Pedido.objects.filter(EstPedCod__EstPedDes='finalizado').values())  # Convertir a lista de diccionarios
+def pedidos_view(request):
+    pedidos_en_proceso = Pedido.objects.filter(EstPedCod_id=1).prefetch_related('detalles').values()
+    pedidos_cancelados = Pedido.objects.filter(EstPedCod_id=2).prefetch_related('detalles').values()
+    pedidos_finalizados = Pedido.objects.filter(EstPedCod_id=3).prefetch_related('detalles').values()
+
+    pedidos_con_detalles = []
+    for queryset in [pedidos_cancelados, pedidos_en_proceso, pedidos_finalizados]:
+        for pedido in queryset:
+            detalles = list(PedidoDetalle.objects.filter(PedCod_id=pedido['PedCod']).values(
+                'PedCan', 'MenCod__MenDes'  # Incluye el nombre del plato en la consulta
+            ))
+            pedido['DetPed'] = detalles
+            pedidos_con_detalles.append(pedido)
+
+    # Serializar los datos a JSON usando DjangoJSONEncoder
+    pedidos_en_proceso_json = json.dumps([p for p in pedidos_con_detalles if p['EstPedCod_id'] == 1], cls=DjangoJSONEncoder)
+    pedidos_cancelados_json = json.dumps([p for p in pedidos_con_detalles if p['EstPedCod_id'] == 2], cls=DjangoJSONEncoder)
+    pedidos_finalizados_json = json.dumps([p for p in pedidos_con_detalles if p['EstPedCod_id'] == 3], cls=DjangoJSONEncoder)
 
     return render(request, 'pedidos.html', {
-        'pedidos_cancelados': pedidos_cancelados,
-        'pedidos_en_proceso': pedidos_en_proceso,
-        'pedidos_finalizados': pedidos_finalizados,
+        'pedidos_cancelados': pedidos_cancelados_json,
+        'pedidos_en_proceso': pedidos_en_proceso_json,
+        'pedidos_finalizados': pedidos_finalizados_json,
     })
 
 @login_required
