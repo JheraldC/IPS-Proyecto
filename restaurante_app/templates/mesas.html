@@ -1,16 +1,17 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Mesas{% endblock %}
 
 {% block content %}
-
+<script src="{% static 'js/mesas.js' %}"></script>
 <div class="container flex">
   <div class="mesas-section">
     <h2>Mesas</h2>
     <div class="mesa-grid">
       {% for mesa in mesas %}
       <a href="{% url 'mesas' %}?mesa_numero={{ mesa.numero }}"
-        class="mesa{% if mesa.EstMesCod.EstMesDes == 'ocupado' and mesa.tiene_pedido %} ocupada{% elif mesa.EstMesCod.EstMesDes == 'sucio' %} sucio{% endif %}">
+        class="mesa{% if mesa.EstMesCod.EstMesDes == 'ocupado'%} ocupada{% elif mesa.EstMesCod.EstMesDes == 'sucio' %} sucio{% endif %}">
         {{ mesa.numero }}
       </a>
       {% endfor %}
@@ -39,10 +40,10 @@
       <i class="bi bi-exclamation-triangle-fill"></i> La mesa está sucia.
     </div>
     {% csrf_token %}
-    <button id="limpiar-mesa" data-mesa-id="{{ mesa_seleccionada.numero }}">Limpiar</button>
+    <input type="submit" id="limpiar-mesa" data-mesa-id="{{ mesa_seleccionada.numero }}" value="Limpiar"/>
     {% else %}
     {% if form %}
-    <form method="POST" action="{% url 'detalle_pedido' mesa_seleccionada.numero %}">
+    <form method="POST" action="{% url 'mesas' %}">
       {% csrf_token %}
       {{ form }}
       <button type="submit" class="btn btn-primary">Abrir Mesa</button>

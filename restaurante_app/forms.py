@@ -11,4 +11,3 @@ class AbrirMesaForm(forms.ModelForm):
     class Meta:
         model = Mesa
         fields = ['numero', 'num_personas', 'cliente', 'mozo', 'comentarios']  # Agrega 'numero' a los campos
-        from django import forms

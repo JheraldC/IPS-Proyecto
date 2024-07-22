@@ -115,16 +115,25 @@ def mesas_view(request):
 
     if request.method == 'POST':
         mesa_numero = request.POST.get('numero')  # Obtén el número de mesa del formulario
+        print(mesa_numero)
         if mesa_numero:
             mesa_seleccionada = get_object_or_404(Mesa, numero=mesa_numero)
             if mesa_seleccionada.EstMesCod.EstMesDes == 'disponible':
                 form = AbrirMesaForm(request.POST, instance=mesa_seleccionada)  # Pasa la instancia de mesa al formulario
                 if form.is_valid():
-                    mesa = form.save(commit=False)
-                    mesa.EstMesCod = EstadoMesa.objects.get(EstMesDes='ocupado')
-                    mesa.save()
+                    # Almacenar el ID del mozo en la sesión
+                    request.session['abrir_mesa_form_data'] = {
+                        'num_personas': form.cleaned_data['num_personas'],
+                        'cliente': form.cleaned_data['cliente'],
+                        'mozo_id': form.cleaned_data['mozo'].id,  # Almacenar el ID del mozo
+                        'comentarios': form.cleaned_data['comentarios'],
+                    }
+                    print(form.cleaned_data)
 
+                    mesa = form.save(commit=False)
                     return redirect('detalle_pedido', mesa_numero=mesa.numero)
+                else:
+                    print("Errores de validación del formulario:", form.errors)  # Imprimir errores de validación
 
     else:  # Si es GET, verifica si se pasó un número de mesa en la URL
         mesa_numero = request.GET.get('mesa_numero')
@@ -151,14 +160,6 @@ def mesas_view(request):
                     'mensaje_sucio': mensaje_sucia,
                 })
 
-
-    for mesa in mesas:
-        mesa.tiene_pedido = (
-            Pedido.objects.filter(MesCod=mesa).exists() and
-            PedidoDetalle.objects.filter(PedCod__MesCod=mesa).exists()
-        )
-
-
     return render(request, 'mesas.html', {
         'mesas': mesas,
         'mesa_seleccionada': mesa_seleccionada,
@@ -175,28 +176,26 @@ def detalle_pedido(request, mesa_numero):
 
     # Obtener o crear el estado "En proceso"
     estado_en_proceso, _ = EstadoPedido.objects.get_or_create(EstPedDes='enproceso')
-
-    # Obtener o crear el pedido, proporcionando el ID del estado directamente
-    pedido, created = Pedido.objects.get_or_create(
-        MesCod=mesa,
-        defaults={
-            'MozCod': request.user,
-            'PedFec': date.today(),
-            'PedHor': timezone.now(),
-            'PedCli': request.POST.get('cliente'), #guardamos el pedido
-            'PedTot': 0,
-            'PedObs': request.POST.get('comentarios'),
-            'EstPedCod': estado_en_proceso,  # Asignar el estado obtenido
-        }
-    )
+    pedido = None  # Inicializar pedido como None
 
     categorias = CategoriaMenu.objects.all()
     platos = Menu.objects.filter(EstMenCod__EstMenDes='disponible') # Filtramos los platos disponibles
     platos_json = serializers.serialize('json', platos)  # Serializa los platos a JSON
-    detalles_pedido = pedido.detalles.all()
-    detalles_pedido_json = serializers.serialize("json", detalles_pedido)
 
-    if request.method == 'POST':
+    form_data = request.session.get('abrir_mesa_form_data', None)
+
+    if form_data:
+        num_personas = form_data['num_personas']
+        cliente = form_data['cliente']
+        comentarios = form_data['comentarios']
+
+        # Obtener el objeto Usuario del mozo a partir del ID almacenado en la sesión
+        mozo_id = form_data['mozo_id']
+        mozo = Usuario.objects.get(id=mozo_id)
+    else:
+        return redirect('mesas')
+
+    if request.method == "POST":
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             try:
                 data = json.loads(request.body)
@@ -204,7 +203,18 @@ def detalle_pedido(request, mesa_numero):
                 cantidad = data.get('cantidad')
                 finalizar_venta = data.get('finalizar_venta')
 
-                if finalizar_venta:
+                if finalizar_venta and not pedido and data.get('platos'):
+                    pedido = Pedido.objects.create(
+                        MesCod=mesa,
+                        MozCod=mozo,
+                        PedFec=date.today(),
+                        PedHor=timezone.now(),
+                        PedCli=cliente,
+                        PedTot=0,
+                        PedObs=comentarios,
+                        EstPedCod=estado_en_proceso,
+                        PedNumPer=num_personas,  # Añadir número de personas
+                    )
                     # 1. Creamos los PedidoDetalle
                     for plato_id, cantidad in data.get('platos', {}).items():
                         if cantidad > 0:
@@ -222,12 +232,17 @@ def detalle_pedido(request, mesa_numero):
                     # 2. Redirigimos a la vista de generar_ticket
                     pedido.PedTot = pedido.detalles.aggregate(Sum('PedSub'))['PedSub__sum'] or 0
                     pedido.save()
+                    # Respuesta exitosa (JSON)
                     return JsonResponse({
                         'success': True,
-                        'pedido_id': pedido.PedCod,  # Incluimos el ID del pedido
+                        'pedido_id': pedido.PedCod,
                         'redirect_url': reverse('descargar_ticket', args=[pedido.PedCod])
                     })
-                else:
+                elif not finalizar_venta and plato_id and cantidad:
+                    # Si no se está finalizando, verificar si el pedido ya existe
+                    if not pedido:
+                        return JsonResponse({'success': False, 'error': 'El pedido no ha sido creado aún.'})
+
                     plato = Menu.objects.get(MenCod=plato_id)
                     subtotal = plato.precio * cantidad
 
@@ -241,16 +256,29 @@ def detalle_pedido(request, mesa_numero):
                     detalle.PedSub = subtotal
                     detalle.save()
 
-                 # Actualizar el total del pedido
-
+                    # Actualizar el total del pedido
+                    detalles_pedido = pedido.detalles.all()
+                    # Respuesta exitosa (JSON) al agregar platos
                     return JsonResponse({
-                        'success': True, 
-                        'total': pedido.PedTot, 
+                        'success': True,
+                        'total': pedido.PedTot,
                         'detalles_pedido': list(detalles_pedido.values('MenCod__MenDes', 'PedCan', 'PedSub'))
                     })
 
-            except (json.JSONDecodeError, Menu.DoesNotExist) as e:
+                else:
+                    return JsonResponse({'success': False, 'error': 'Datos incompletos para crear el pedido.'})
+
+            except (json.JSONDecodeError, Menu.DoesNotExist, Exception) as e:
+                # Respuesta de error (JSON) en caso de excepción
                 return JsonResponse({'success': False, 'error': str(e)})
+
+    # Mover la consulta de detalles_pedido fuera del bloque if
+    if pedido:  # Verificar si pedido existe antes de acceder a detalles
+        detalles_pedido = pedido.detalles.all()
+    else:
+        detalles_pedido = []  # Si pedido es None, inicializar con una lista vacía
+
+    detalles_pedido_json = serializers.serialize("json", detalles_pedido)
 
     return render(request, 'detalle_pedido.html', {
         'mesa': mesa,
@@ -260,6 +288,7 @@ def detalle_pedido(request, mesa_numero):
         'platos_json': platos_json,  # Pasar los platos serializados en JSON
         'detalles_pedido': detalles_pedido,
         'detalles_pedido_json': detalles_pedido_json,
+        'form_data': form_data,  # Pasar los datos del formulario al contexto
     })
 
 @login_required

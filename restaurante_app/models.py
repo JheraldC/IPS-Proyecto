@@ -65,6 +65,7 @@ class EstadoPedido(models.Model):
 
 class Pedido(models.Model):
     PedCod = models.AutoField(primary_key=True)
+    PedNumPer = models.PositiveIntegerField(default=1)
     MesCod = models.ForeignKey(Mesa, on_delete=models.CASCADE)
     MozCod = models.ForeignKey(Usuario, on_delete=models.CASCADE, limit_choices_to={'TipUsuCod__TipUsuDes': 'Mozo'})
     PedCli = models.CharField(max_length=255, blank=True)  # Nombre del cliente
@@ -83,7 +84,6 @@ class PedidoDetalle(models.Model):
     MenCod = models.ForeignKey(Menu, on_delete=models.CASCADE)
     PedCan = models.IntegerField()
     PedSub = models.DecimalField(max_digits=10, decimal_places=2)
-    PedObs = models.TextField(blank=True)  # Permite observaciones vacías
 
     class Meta:
         unique_together = (('PedCod', 'MenCod'),)  # Asegura que la combinación de pedido y plato sea única

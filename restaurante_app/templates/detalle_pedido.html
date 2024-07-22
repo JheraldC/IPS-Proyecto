@@ -4,6 +4,7 @@
 {% block title %}Detalle Pedido - Mesa {{ mesa.numero }}{% endblock %}
 
 {% block content %}
+<script src="{% static 'js/detalle_pedidos.js' %}"></script>
 
 <div class="container" data-mesa-numero="{{ mesa.numero }}">
   <h2>Mesa {{ mesa.numero }}</h2>
@@ -46,7 +47,8 @@
         </ul>
         <p>Total: S/<span id="total-amount">0.00</span></p>
       </div>
-
+      <input type="hidden" id="cliente" name="cliente" value="{{ pedido.PedCli }}">
+      <input type="hidden" id="comentarios" name="comentarios" value="{{ pedido.PedObs }}">
       <button id="finalizar-venta">Finalizar Venta</button>
     </div>
   </div>
