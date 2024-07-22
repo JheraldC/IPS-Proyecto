@@ -51,7 +51,7 @@ class EstadoMesa(models.Model):
 
 class Mesa(models.Model):
     numero = models.AutoField(primary_key=True)
-    EstMesCod = models.ForeignKey(EstadoMesa, on_delete=models.CASCADE)
+    EstMesCod = models.ForeignKey(EstadoMesa, on_delete=models.CASCADE, default=1)
 
     def __str__(self):
         return f"Mesa {self.numero}"

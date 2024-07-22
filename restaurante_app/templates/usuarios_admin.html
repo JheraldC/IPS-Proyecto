@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Plato{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Administración de Usuarios</h2>
+
+    <a href="{% url 'crear_usuario' %}" class="btn btn-primary mb-3">Crear Nuevo Usuario</a>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nombre de Usuario</th>
+                <th>Tipo de Usuario</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+                <td>{{ usuario.username }}</td>
+                <td>{{ usuario.TipUsuCod }}</td>
+                <td>
+                    <a href="{% url 'editar_usuario' usuario.id %}" class="btn btn-warning btn-sm">Editar</a>
+                    <a href="{% url 'eliminar_usuario' usuario.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -30,9 +30,13 @@ urlpatterns = [
     path('mesas-admin/', views.mesas_admin, name='mesas_admin'),
     path('mesas-admin/crear/', views.crear_mesa, name='crear_mesa'),
     path('mesas-admin/<int:mesa_numero>/eliminar/', views.eliminar_mesa, name='eliminar_mesa'),
+    path('mesas-admin/<int:mesa_numero>/restaurar/', views.restaurar_mesa, name='restaurar_mesa'),
 
     #Usuarios
     path('usuarios/', views.usuarios_admin, name='usuarios_admin'),
+    path('usuarios/crear/', views.crear_usuario, name='crear_usuario'),
+    path('usuarios/<int:usuario_id>/editar/', views.editar_usuario, name='editar_usuario'),
+    path('usuarios/<int:usuario_id>/eliminar/', views.eliminar_usuario, name='eliminar_usuario'),
 
     #inicio y cerrar
     path("login/", views.login_view, name="login"),

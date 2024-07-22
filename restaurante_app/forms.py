@@ -1,5 +1,6 @@
 from django import forms
 from .models import Mesa, Usuario, Menu, CategoriaMenu, EstadoMesa
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
 class AbrirMesaForm(forms.ModelForm):
     num_personas = forms.IntegerField(label="# Personas")
@@ -41,3 +42,38 @@ class MesaForm(forms.ModelForm):
             'EstMesCod': forms.Select(attrs={'class': 'form-control'}),
         }
 
+class CustomUserCreationForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        model = Usuario  
+        fields = UserCreationForm.Meta.fields + ('TipUsuCod',) 
+        labels = {
+            'TipUsuCod': 'Tipo de Usuario',
+        }
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'TipUsuCod': forms.Select(attrs={'class': 'form-control'}),
+            'password': forms.PasswordInput(attrs={'class': 'form-control'}),
+        }
+
+class CustomUserChangeForm(UserChangeForm):
+    password = forms.CharField(widget=forms.PasswordInput, required=True, label='Contraseña')  # Label para contraseña
+
+    class Meta(UserChangeForm.Meta):
+        model = Usuario
+        fields = ('username', 'first_name', 'last_name', 'email', 'password', 'TipUsuCod')
+        labels = {
+            'TipUsuCod': 'Tipo de Usuario',
+        }
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),  # EmailInput para el correo electrónico
+            'password': forms.PasswordInput(attrs={'class': 'form-control'}),  # PasswordInput para la contraseña
+            'TipUsuCod': forms.Select(attrs={'class': 'form-control'}),  # Select para el tipo de usuario
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].required = True

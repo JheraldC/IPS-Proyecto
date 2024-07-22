@@ -2,19 +2,22 @@ import json
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.serializers.json import DjangoJSONEncoder
+from django.core.paginator import Paginator
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.contrib import messages
 from django.urls import reverse
 from django.utils import timezone
 from datetime import date
 from django.http import JsonResponse
 from .models import Mesa, Pedido, PedidoDetalle, Usuario, EstadoMesa, EstadoPedido, CategoriaMenu, Menu
 from django.db.models import Sum
-from .forms import AbrirMesaForm, MenuForm, CategoriaMenuForm, MesaForm
+from .forms import AbrirMesaForm, MenuForm, CategoriaMenuForm, CustomUserChangeForm, CustomUserCreationForm
 from django.core import serializers
 
 def login_view(request):
@@ -100,6 +103,11 @@ def obtener_pedidos_json(request):
         for pedido in pedidos:
             pedido['DetPed'] = list(pedido.get('detalles', []))
 
+    # Paginación de pedidos finalizados
+    page_number = request.GET.get('page', 1)  # Obtener el número de página de la solicitud GET
+    paginator = Paginator(pedidos_finalizados, 6)  # 6 pedidos por página
+    page_obj = paginator.get_page(page_number)
+
     return JsonResponse({
         'pedidos_cancelados': pedidos_cancelados,
         'pedidos_en_proceso': pedidos_en_proceso,
@@ -108,7 +116,7 @@ def obtener_pedidos_json(request):
 
 @login_required
 def mesas_view(request):
-    mesas = Mesa.objects.all()
+    mesas = Mesa.objects.exclude(EstMesCod__EstMesDes='eliminado')  # Excluir mesas eliminadas
     mozos = Usuario.objects.filter(TipUsuCod__TipUsuDes="Mozo")
     mesa_seleccionada = None
     form = AbrirMesaForm()  # Crea una instancia del formulario siempre
@@ -128,7 +136,6 @@ def mesas_view(request):
                         'mozo_id': form.cleaned_data['mozo'].id,  # Almacenar el ID del mozo
                         'comentarios': form.cleaned_data['comentarios'],
                     }
-                    print(form.cleaned_data)
 
                     mesa = form.save(commit=False)
                     return redirect('detalle_pedido', mesa_numero=mesa.numero)
@@ -471,37 +478,85 @@ def crear_mesa(request):
     if request.user.TipUsuCod.TipUsuDes != "Administrador":
         return redirect('index')
 
-    if request.method == 'POST':
-        form = MesaForm(request.POST)
-        if form.is_valid():
-            # Verificar si hay números de mesa eliminados disponibles
-            numeros_eliminados = Mesa.objects.filter(EstMesCod__EstMesDes='eliminado').values_list('numero', flat=True)
-            if numeros_eliminados:
-                numero_mesa = min(numeros_eliminados)  # Reutilizar el número más bajo
-            else:
-                numero_mesa = None  # Si no hay números eliminados, usar el siguiente autoincrementado
-            
-            mesa = form.save(commit=False)
-            mesa.numero = numero_mesa  # Asignar el número de mesa
-            mesa.EstMesCod = EstadoMesa.objects.get(EstMesDes='disponible')
-            mesa.save()
-            return redirect('mesas_admin')
+    Mesa.objects.create(EstMesCod=EstadoMesa.objects.get(EstMesDes='disponible'))
+
+    return redirect('mesas_admin')  # Redirigir a la lista de mesas
+
 
 @login_required
 def eliminar_mesa(request, mesa_numero):
+    mesa = get_object_or_404(Mesa, numero=mesa_numero)
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    if request.method == 'POST':
+        mesa.EstMesCod = EstadoMesa.objects.get(EstMesDes='eliminado')  # Marcar como eliminada
+        mesa.save()
+        return redirect('mesas_admin')
+    
+    return render(request, 'eliminar_mesa.html', {'mesa': mesa})
+
+@login_required
+def restaurar_mesa(request, mesa_numero):
     if request.user.TipUsuCod.TipUsuDes != "Administrador":
         return redirect('index')
 
     mesa = get_object_or_404(Mesa, numero=mesa_numero)
-    if request.method == 'POST':
-        mesa = get_object_or_404(Mesa, numero=mesa_numero)
-        mesa.EstMesCod = EstadoMesa.objects.get(EstMesDes='eliminado')
+    if mesa.EstMesCod.EstMesDes == 'eliminado':
+        mesa.EstMesCod = EstadoMesa.objects.get(EstMesDes='disponible')
         mesa.save()
-        return redirect('mesas_admin')
-    return render(request, 'eliminar_mesa.html', {'mesa': mesa})
+    return redirect('mesas_admin')
 
 # Vistas CRUD para Usuarios (Usuario)
 @login_required
 def usuarios_admin(request):
-    # ... (lógica para listar, crear, actualizar y eliminar usuarios) ...
-    return 0
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    usuarios = Usuario.objects.all()
+    return render(request, 'usuarios_admin.html', {'usuarios': usuarios})
+
+@login_required
+def crear_usuario(request):
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)  # Usar el formulario personalizado
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Usuario creado exitosamente.')
+            return redirect('usuarios_admin')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'crear_usuario.html', {'form': form})
+
+@login_required
+def editar_usuario(request, usuario_id):
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    usuario = get_object_or_404(Usuario, id=usuario_id)
+    if request.method == 'POST':
+        form = CustomUserChangeForm(request.POST, instance=usuario)  # Usar el formulario personalizado
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.set_password(form.cleaned_data['password'])
+            user.save()
+            messages.success(request, 'Usuario actualizado exitosamente.')
+            return redirect('usuarios_admin')
+    else:
+        form = CustomUserChangeForm(instance=usuario, initial={'TipUsuCod': usuario.TipUsuCod_id})
+    return render(request, 'editar_usuario.html', {'form': form, 'usuario': usuario})
+
+@login_required
+def eliminar_usuario(request, usuario_id):
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    usuario = get_object_or_404(Usuario, id=usuario_id)
+    if request.method == 'POST':
+        usuario.delete()
+        messages.success(request, 'Usuario eliminado exitosamente.')
+        return redirect('usuarios_admin')
+    return render(request, 'eliminar_usuario.html', {'usuario': usuario})

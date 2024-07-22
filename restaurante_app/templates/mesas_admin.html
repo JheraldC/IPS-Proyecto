@@ -4,29 +4,35 @@
 
 {% block content %}
 <div class="container">
-    <h2>Administración de Mesas</h2>
+  <h2>Administración de Mesas</h2>
 
-    <a href="{% url 'crear_mesa' %}" class="btn btn-primary mb-3">Crear Nueva Mesa</a>
+  <a href="{% url 'crear_mesa' %}" class="btn btn-primary mb-3">Crear Nueva Mesa</a>
 
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Número</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for mesa in mesas %}
-            <tr>
-                <td>{{ mesa.numero }}</td>
-                <td>{{ mesa.EstMesCod }}</td>
-                <td>
-                    <a href="{% url 'eliminar_mesa' mesa.numero %}" class="btn btn-danger btn-sm">Eliminar</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Número</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for mesa in mesas %}
+      <tr>
+        <td>{{ mesa.numero }}</td>
+        <td>{{ mesa.EstMesCod }}</td>
+        <td>
+          {% if mesa.EstMesCod.EstMesDes == 'eliminado' %}
+          <a href="{% url 'restaurar_mesa' mesa.numero %}" class="btn btn-success btn-sm">Restaurar</a>
+          {% elif mesa.EstMesCod.EstMesDes == 'ocupado' %} 
+          <button class="btn btn-danger btn-sm" disabled>Eliminar (Mesa ocupada)</button>
+          {% else %}
+          <a href="{% url 'eliminar_mesa' mesa.numero %}" class="btn btn-danger btn-sm">Eliminar</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 {% endblock %}
