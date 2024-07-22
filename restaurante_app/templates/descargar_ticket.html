@@ -1,7 +1,0 @@
-{% extends 'base.html' %}
-
-{% block content %}
-    <h2>Tu ticket está listo para descargar</h2>
-    <a href="{% url 'generar_ticket' pedido_id=pedido.PedCod %}" class="btn btn-primary">Descargar Ticket</a>
-{% endblock %}
-

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="success-container text-center">  
+    <div class="success-message">
+        <img src="{% static 'img/bell.gif' %}" alt="Campana" class="bell-icon">  
+        <h2>¡Pedido creado exitosamente!</h2>
+    </div>
+    <p>Tu pedido ha sido creado con el número {{ pedido.PedCod }}.</p>
+    <div class="button-container">
+        <a href="{% url 'descargar_ticket' pedido.PedCod %}" class="btn btn-primary">Descargar Ticket</a>
+        <a href="{% url 'pedidos' %}" class="btn btn-secondary">Ir a Pedidos</a>  
+    </div>
+</div>
+{% endblock %}
+

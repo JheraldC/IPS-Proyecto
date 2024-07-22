@@ -632,3 +632,31 @@ ul {
   cursor: pointer;
   margin-top: 10px;
 }
+
+/* Estilos generales para centrar el contenido */
+.success-container {
+  display: flex;
+  flex-direction: column;
+  /* Orientación vertical */
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  /* Ocupa al menos el 80% de la altura de la ventana */
+}
+
+.success-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bell-icon {
+  width: 100px;
+  margin-bottom: 20px;
+}
+
+.button-container {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}

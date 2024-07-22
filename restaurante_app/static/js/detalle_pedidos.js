@@ -23,7 +23,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          window.location.href = data.redirect_url;
+          const downloadLink = document.createElement('a');
+          downloadLink.href = data.redirect_url; // Usar la URL de descarga de la respuesta JSON
+          downloadLink.download = 'ticket_pedido_' + data.pedido_id + '.pdf';
+          downloadLink.click();
+
+          setTimeout(() => {
+            window.location.href = `/pedido-creado/${data.pedido_id}/`;
+          }, 1000); // Retraso de 1 segundo (ajusta según sea necesario)
         } else {
           alert('Error al realizar el pedido: ' + data.error);
         }

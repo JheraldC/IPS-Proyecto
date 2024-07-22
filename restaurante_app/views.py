@@ -295,6 +295,10 @@ def detalle_pedido(request, mesa_numero):
 def descargar_ticket(request, pedido_id):
     pedido = get_object_or_404(Pedido, PedCod=pedido_id)
 
+    # Configuración de la respuesta HTTP (colocar aquí)
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="ticket_pedido_{pedido_id}.pdf"'
+
     # Configuración de la respuesta HTTP
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="ticket_pedido_{pedido_id}.pdf"'
@@ -346,4 +350,9 @@ def descargar_ticket(request, pedido_id):
     # Construir el documento PDF
     doc.build(story)
 
-    return response
+    return response 
+
+@login_required
+def pedido_creado(request, pedido_id):
+    pedido = get_object_or_404(Pedido, PedCod=pedido_id)
+    return render(request, 'pedido_creado.html', {'pedido': pedido})
