@@ -14,7 +14,7 @@ from datetime import date
 from django.http import JsonResponse
 from .models import Mesa, Pedido, PedidoDetalle, Usuario, EstadoMesa, EstadoPedido, CategoriaMenu, Menu
 from django.db.models import Sum
-from .forms import AbrirMesaForm, MenuForm
+from .forms import AbrirMesaForm, MenuForm, CategoriaMenuForm, MesaForm
 from django.core import serializers
 
 def login_view(request):
@@ -411,14 +411,94 @@ def eliminar_plato(request, plato_id):
 # Vistas CRUD para Categorías (CategoriaMenu)
 @login_required
 def categorias_admin(request):
-    # ... (lógica para listar, crear, actualizar y eliminar categorías) ...
-    return 0
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    categorias = CategoriaMenu.objects.all()
+    return render(request, 'categorias_admin.html', {'categorias': categorias})
+
+@login_required
+def crear_categoria(request):
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    if request.method == 'POST':
+        form = CategoriaMenuForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('categorias_admin')
+    else:
+        form = CategoriaMenuForm()
+    return render(request, 'crear_categoria.html', {'form': form})
+
+@login_required
+def editar_categoria(request, categoria_id):
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    categoria = get_object_or_404(CategoriaMenu, CatCod=categoria_id)
+    if request.method == 'POST':
+        form = CategoriaMenuForm(request.POST, instance=categoria)
+        if form.is_valid():
+            form.save()
+            return redirect('categorias_admin')
+    else:
+        form = CategoriaMenuForm(instance=categoria)
+    return render(request, 'editar_categoria.html', {'form': form, 'categoria': categoria})
+
+@login_required
+def eliminar_categoria(request, categoria_id):
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    categoria = get_object_or_404(CategoriaMenu, CatCod=categoria_id)
+    if request.method == 'POST':
+        categoria.delete()
+        return redirect('categorias_admin')
+    return render(request, 'eliminar_categoria.html', {'categoria': categoria})
 
 # Vistas CRUD para Mesas (Mesa)
 @login_required
 def mesas_admin(request):
-    # ... (lógica para listar, crear, actualizar y eliminar mesas) ...
-    return 0
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    mesas = Mesa.objects.all()
+    return render(request, 'mesas_admin.html', {'mesas': mesas})
+
+@login_required
+def crear_mesa(request):
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    if request.method == 'POST':
+        form = MesaForm(request.POST)
+        if form.is_valid():
+            # Verificar si hay números de mesa eliminados disponibles
+            numeros_eliminados = Mesa.objects.filter(EstMesCod__EstMesDes='eliminado').values_list('numero', flat=True)
+            if numeros_eliminados:
+                numero_mesa = min(numeros_eliminados)  # Reutilizar el número más bajo
+            else:
+                numero_mesa = None  # Si no hay números eliminados, usar el siguiente autoincrementado
+            
+            mesa = form.save(commit=False)
+            mesa.numero = numero_mesa  # Asignar el número de mesa
+            mesa.EstMesCod = EstadoMesa.objects.get(EstMesDes='disponible')
+            mesa.save()
+            return redirect('mesas_admin')
+
+@login_required
+def eliminar_mesa(request, mesa_numero):
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    mesa = get_object_or_404(Mesa, numero=mesa_numero)
+    if request.method == 'POST':
+        mesa = get_object_or_404(Mesa, numero=mesa_numero)
+        mesa.EstMesCod = EstadoMesa.objects.get(EstMesDes='eliminado')
+        mesa.save()
+        return redirect('mesas_admin')
+    return render(request, 'eliminar_mesa.html', {'mesa': mesa})
 
 # Vistas CRUD para Usuarios (Usuario)
 @login_required

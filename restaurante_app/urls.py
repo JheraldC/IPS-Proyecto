@@ -22,9 +22,14 @@ urlpatterns = [
 
     #Categorias
     path('categorias/', views.categorias_admin, name='categorias_admin'),
+    path('categorias/crear/', views.crear_categoria, name='crear_categoria'),
+    path('categorias/<int:categoria_id>/editar/', views.editar_categoria, name='editar_categoria'),
+    path('categorias/<int:categoria_id>/eliminar/', views.eliminar_categoria, name='eliminar_categoria'),
     
     #Mesas
     path('mesas-admin/', views.mesas_admin, name='mesas_admin'),
+    path('mesas-admin/crear/', views.crear_mesa, name='crear_mesa'),
+    path('mesas-admin/<int:mesa_numero>/eliminar/', views.eliminar_mesa, name='eliminar_mesa'),
 
     #Usuarios
     path('usuarios/', views.usuarios_admin, name='usuarios_admin'),

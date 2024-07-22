@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Categorías{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Administración de Categorías</h2>
+
+    <a href="{% url 'crear_categoria' %}" class="btn btn-primary mb-3">Crear Nueva Categoría</a>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for categoria in categorias %}
+            <tr>
+                <td>{{ categoria.CatDes }}</td>
+                <td>
+                    <a href="{% url 'editar_categoria' categoria.CatCod %}" class="btn btn-warning btn-sm">Editar</a>
+                    <a href="{% url 'eliminar_categoria' categoria.CatCod %}" class="btn btn-danger btn-sm">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

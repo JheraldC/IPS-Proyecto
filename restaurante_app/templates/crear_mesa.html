@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}Crear Plato{% endblock %}
+{% block title %}Crear Mesa{% endblock %}
 
 {% block content %}
 <div class="container">
-  <h2>Crear Nuevo Plato</h2>
+  <h2>Crear Nueva Mesa</h2>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
