@@ -27,6 +27,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
         return false; // No mostrar si el estado no coincide
       });
 
+      if (listaId === 'lista-finalizados') {
+        // Ordenar los pedidos finalizados por fecha y hora de forma descendente
+        pedidosFiltrados.sort((a, b) => {
+          const fechaA = new Date(a.PedFec + 'T' + a.PedHor);
+          const fechaB = new Date(b.PedFec + 'T' + b.PedHor);
+          return fechaB - fechaA; // Orden descendente
+        });
+      }
+
       pedidosFiltrados.forEach(pedido => {
         const listItem = document.createElement('li');
         listItem.classList.add('pedido-item-pedidos');

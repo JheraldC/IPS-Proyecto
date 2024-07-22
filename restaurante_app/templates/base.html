@@ -24,16 +24,22 @@
       </div>
       <nav>
         <ul>
-          <li>{% if request.user.TipUsuCod.TipUsuDes == "Mozo" %}<a class="link-nav" href="/mesas">Mesas</a>{% endif %}</li>
-          <li>{% if request.user.TipUsuCod.TipUsuDes == "Administrador" %}<a class="link-nav" href="/platos">Platos</a>{% endif %}</li>
-          <li>{% if request.user.TipUsuCod.TipUsuDes == "Cocinero" or request.user.TipUsuCod.TipUsuDes == "Mozo" %}<a class="link-nav"
-              href="/pedidos">Pedidos</a>{% endif %}</li>
+          <li>{% if request.user.TipUsuCod.TipUsuDes == "Mozo" %}<a class="link-nav" href="/mesas">Mesas</a>{% endif %}
+          </li>
+          {% if request.user.TipUsuCod.TipUsuDes == "Administrador" %}
+          <li><a class="link-nav" href="{% url 'platos_admin' %}">Platos</a></li>
+          <li><a class="link-nav" href="{% url 'categorias_admin' %}">Categorías</a></li>
+          <li><a class="link-nav" href="{% url 'mesas_admin' %}">Mesas</a></li>
+          <li><a class="link-nav" href="{% url 'usuarios_admin' %}">Usuarios</a></li>
+          {% endif %}
+          <li>{% if request.user.TipUsuCod.TipUsuDes == "Cocinero" or request.user.TipUsuCod.TipUsuDes == "Mozo" %}<a
+              class="link-nav" href="/pedidos">Pedidos</a>{% endif %}</li>
         </ul>
       </nav>
       <div class="icons">
-          <i class="fas fa-user"></i>
-          <i class="fas fa-cog"></i>
-          <a href="/logout"><i class="fa-solid fa-right-from-bracket"></i></a>
+        <i class="fas fa-user"></i>
+        <i class="fas fa-cog"></i>
+        <a href="/logout"><i class="fa-solid fa-right-from-bracket"></i></a>
       </div>
     </div>
   </header>
@@ -46,5 +52,5 @@
     <!-- Footer content -->
   </footer>
 </body>
-</html>
 
+</html>

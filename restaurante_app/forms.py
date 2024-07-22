@@ -11,3 +11,8 @@ class AbrirMesaForm(forms.ModelForm):
     class Meta:
         model = Mesa
         fields = ['numero', 'num_personas', 'cliente', 'mozo', 'comentarios']  # Agrega 'numero' a los campos
+
+class MenuForm(forms.ModelForm):
+    class Meta:
+        model = Menu
+        fields = '__all__'  # O especifica los campos que quieres incluir

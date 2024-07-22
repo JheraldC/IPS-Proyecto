@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Plato{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Eliminar Plato</h2>
+    <p>¿Estás seguro de que quieres eliminar el plato "{{ plato.MenDes }}"? Esta acción no se puede deshacer.</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a href="{% url 'platos_admin' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

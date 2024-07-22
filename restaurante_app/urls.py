@@ -2,6 +2,8 @@ from django.urls import path
 from . import views
 urlpatterns = [
     path("", views.index, name="index"),
+
+    #gestion
     path('mesas/', views.mesas_view, name='mesas'),
     path('mesas/<int:mesa_numero>/detalle-pedido/', views.detalle_pedido, name='detalle_pedido'),
     path('pedidos/', views.pedidos_view, name='pedidos'),
@@ -10,6 +12,24 @@ urlpatterns = [
     path('obtener_pedidos_json/', views.obtener_pedidos_json, name='obtener_pedidos_json'),
     path('limpiar_mesa/<int:mesa_id>/', views.limpiar_mesa, name='limpiar_mesa'),
     path('pedido-creado/<int:pedido_id>/', views.pedido_creado, name='pedido_creado'),
+
+    #Admin
+    #Platos
+    path('platos/', views.platos_admin, name='platos_admin'),
+    path('platos/crear/', views.crear_plato, name='crear_plato'),
+    path('platos/<int:plato_id>/editar/', views.editar_plato, name='editar_plato'),
+    path('platos/<int:plato_id>/eliminar/', views.eliminar_plato, name='eliminar_plato'),
+
+    #Categorias
+    path('categorias/', views.categorias_admin, name='categorias_admin'),
+    
+    #Mesas
+    path('mesas-admin/', views.mesas_admin, name='mesas_admin'),
+
+    #Usuarios
+    path('usuarios/', views.usuarios_admin, name='usuarios_admin'),
+
+    #inicio y cerrar
     path("login/", views.login_view, name="login"),
     path('logout/', views.logout_view, name='logout'),
 ]

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Plato{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Editar Plato: {{ plato.MenDes }}</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+    </form>
+</div>
+{% endblock %}

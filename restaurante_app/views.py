@@ -14,7 +14,7 @@ from datetime import date
 from django.http import JsonResponse
 from .models import Mesa, Pedido, PedidoDetalle, Usuario, EstadoMesa, EstadoPedido, CategoriaMenu, Menu
 from django.db.models import Sum
-from .forms import AbrirMesaForm 
+from .forms import AbrirMesaForm, MenuForm
 from django.core import serializers
 
 def login_view(request):
@@ -356,3 +356,72 @@ def descargar_ticket(request, pedido_id):
 def pedido_creado(request, pedido_id):
     pedido = get_object_or_404(Pedido, PedCod=pedido_id)
     return render(request, 'pedido_creado.html', {'pedido': pedido})
+
+# ADMIN
+
+# Vistas CRUD para Platos (Menu)
+@login_required
+def platos_admin(request):
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    platos = Menu.objects.all()
+    return render(request, 'platos_admin.html', {'platos': platos})
+
+@login_required
+def crear_plato(request):
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    if request.method == 'POST':
+        form = MenuForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('platos_admin')
+    else:
+        form = MenuForm()
+    return render(request, 'crear_plato.html', {'form': form})
+
+@login_required
+def editar_plato(request, plato_id):
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    plato = get_object_or_404(Menu, MenCod=plato_id)
+    if request.method == 'POST':
+        form = MenuForm(request.POST, instance=plato)
+        if form.is_valid():
+            form.save()
+            return redirect('platos_admin')
+    else:
+        form = MenuForm(instance=plato)
+    return render(request, 'editar_plato.html', {'form': form, 'plato': plato})
+
+@login_required
+def eliminar_plato(request, plato_id):
+    if request.user.TipUsuCod.TipUsuDes != "Administrador":
+        return redirect('index')
+
+    plato = get_object_or_404(Menu, MenCod=plato_id)
+    if request.method == 'POST':
+        plato.delete()
+        return redirect('platos_admin')
+    return render(request, 'eliminar_plato.html', {'plato': plato})
+
+# Vistas CRUD para Categorías (CategoriaMenu)
+@login_required
+def categorias_admin(request):
+    # ... (lógica para listar, crear, actualizar y eliminar categorías) ...
+    return 0
+
+# Vistas CRUD para Mesas (Mesa)
+@login_required
+def mesas_admin(request):
+    # ... (lógica para listar, crear, actualizar y eliminar mesas) ...
+    return 0
+
+# Vistas CRUD para Usuarios (Usuario)
+@login_required
+def usuarios_admin(request):
+    # ... (lógica para listar, crear, actualizar y eliminar usuarios) ...
+    return 0
