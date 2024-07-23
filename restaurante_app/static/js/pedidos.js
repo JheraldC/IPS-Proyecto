@@ -44,6 +44,18 @@ document.addEventListener('DOMContentLoaded', (event) => {
         listItem.classList.add('pedido-item-pedidos');
         listItem.dataset.pedidoId = pedido.PedCod; // Agregar un atributo para identificar el pedido
 
+        // Agregar botón "Cancelar" solo si el pedido está en proceso
+        if (listaId === 'lista-enproceso') {
+          const cancelarButton = document.createElement('button');
+          const xbutton = document.createElement('i');
+          xbutton.classList.add("fa-solid", "fa-x");
+          cancelarButton.classList.add('cancelar-btn');
+          cancelarButton.dataset.pedidoId = pedido.PedCod;
+          cancelarButton.addEventListener('click', () => cancelarPedido(pedido.PedCod));
+          cancelarButton.appendChild(xbutton)
+          listItem.appendChild(cancelarButton);
+        }
+
         // Detalles del pedido (Mesa, Observaciones, Total.mesa)
         const mesaDiv = document.createElement('div');
         mesaDiv.classList.add('mesa-item');
@@ -89,10 +101,33 @@ document.addEventListener('DOMContentLoaded', (event) => {
           listItem.appendChild(siguienteButton);
         }
 
+
         lista.appendChild(listItem);
       });
     }
   }
+
+  // Función para cancelar un pedido
+  function cancelarPedido(pedidoId) {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    fetch(`/cancelar_pedido/${pedidoId}/`, {  // Llamada a la nueva vista
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Actualizar la página o la lista de pedidos
+          location.reload(); // Recarga la página completa
+        } else {
+          alert('Error al cancelar el pedido: ' + data.error);
+        }
+      });
+  }
+
   document.addEventListener('click', function(event) {
     const csrfTokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
     const csrfToken = csrfTokenInput.value;

@@ -640,6 +640,12 @@ ul {
   border-radius: 4px;
   cursor: pointer;
   margin-top: 10px;
+  transition: all 0.2s ease;
+}
+
+.siguiente-btn:hover {
+  background-color: green;
+  color: white;
 }
 
 /* Estilos generales para centrar el contenido */
@@ -687,4 +693,21 @@ ul {
 
 #paginacion-finalizados button:hover {
   background-color: #f0f0f0;
+}
+
+/* Estilos para el botón Cancelar */
+.cancelar-btn {
+  font-size: 10px;
+  width: auto !important;
+  margin-right: 80%;
+  border-radius: 30px !important;
+  background-color: red !important;
+}
+
+.cancelar-btn i{
+  color: white;
+}
+
+.cancelar-btn:hover {
+  background-color: rgba(255, 0, 0, 0.7) !important;
 }

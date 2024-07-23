@@ -12,6 +12,7 @@ urlpatterns = [
     path('obtener_pedidos_json/', views.obtener_pedidos_json, name='obtener_pedidos_json'),
     path('limpiar_mesa/<int:mesa_id>/', views.limpiar_mesa, name='limpiar_mesa'),
     path('pedido-creado/<int:pedido_id>/', views.pedido_creado, name='pedido_creado'),
+    path('cancelar_pedido/<int:pedido_id>/', views.cancelar_pedido, name='cancelar_pedido'),
 
     #Admin
     #Platos

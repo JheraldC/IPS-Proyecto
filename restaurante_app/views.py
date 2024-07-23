@@ -89,6 +89,28 @@ def actualizar_estado_pedido(request, pedido_id):
     else:
         return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
+@login_required
+def cancelar_pedido(request, pedido_id):
+    if request.method == 'POST':
+        try:
+            pedido = Pedido.objects.get(pk=pedido_id)
+            
+            # Cambiar el estado del pedido a "Cancelado" (debes tener este estado en tu modelo)
+            estado_cancelado = EstadoPedido.objects.get(EstPedDes='cancelado')
+            pedido.EstPedCod = estado_cancelado
+            
+            # Cambiar el estado de la mesa a "disponible"
+            mesa = pedido.MesCod
+            mesa.EstMesCod = EstadoMesa.objects.get(EstMesDes='disponible')
+
+            pedido.save()
+            mesa.save()
+            return JsonResponse({'success': True})
+        except Pedido.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Pedido no encontrado'})
+    else:
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
 def limpiar_mesa(request, mesa_id):
     if request.method == 'POST':
         try:
