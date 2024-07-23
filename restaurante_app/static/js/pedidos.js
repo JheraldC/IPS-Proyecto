@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
   const pedidosEnProceso = JSON.parse(document.getElementById('pedidos_en_proceso').textContent);
   const pedidosFinalizados = JSON.parse(document.getElementById('pedidos_finalizados').textContent);
 
+  const listaFinalizados = document.getElementById('lista-finalizados');
+  const paginacionFinalizados = document.getElementById('paginacion-finalizados'); // Contenedor para los botones de paginación
+  let currentPage = 1;
   // Llena las listas de pedidos (con verificación de array)
   llenarListaPedidos('lista-cancelados', pedidosCancelados);
   llenarListaPedidos('lista-enproceso', pedidosEnProceso);
@@ -112,6 +115,53 @@ document.addEventListener('DOMContentLoaded', (event) => {
         });
     }
   });
+
+  // Función para cargar y mostrar los pedidos de una página
+  function cargarPedidos(page) {
+    const fechaActual = new Date().toISOString().split('T')[0]; // Obtener la fecha actual en formato YYYY-MM-DD
+    fetch(`/obtener_pedidos_json/?page=${page}&fecha=${fechaActual}`)
+      .then(response => response.json())
+      .then(data => {
+        llenarListaPedidos('lista-finalizados', data.pedidos_finalizados);
+        currentPage = data.page_number;
+
+        // Actualizar botones de paginación (asegurarse de que se llame)
+        actualizarPaginacion(data.has_next, data.page_number, data.total_pages);
+
+        document.getElementById('num-finalizados').textContent = data.total_finalizados;
+      })
+      .catch(error => {
+        console.error('Error al cargar pedidos:', error);
+        // Manejo de errores en la solicitud fetch (opcional)
+      });
+  }
+
+  // Función para actualizar los botones de paginación
+  function actualizarPaginacion(hasNext, currentPage, totalPages) {
+    paginacionFinalizados.innerHTML = ''; // Limpiar los botones existentes
+
+    // Botón "Anterior"
+    if (currentPage > 1) {
+      const prevButton = document.createElement('button');
+      prevButton.textContent = 'Anterior';
+      prevButton.addEventListener('click', () => cargarPedidos(currentPage - 1));
+      paginacionFinalizados.appendChild(prevButton);
+    }
+
+    // Indicador de página actual
+    const currentPageSpan = document.createElement('span');
+    currentPageSpan.textContent = `${currentPage} de ${totalPages}`;
+    paginacionFinalizados.appendChild(currentPageSpan);
+
+    // Botón "Siguiente"
+    if (hasNext) {
+      const nextButton = document.createElement('button');
+      nextButton.textContent = 'Siguiente';
+      nextButton.addEventListener('click', () => cargarPedidos(currentPage + 1));
+      paginacionFinalizados.appendChild(nextButton);
+    }
+  }
+
   // Función para actualizar los contadores
   function actualizarContadores() {
     const numCancelados = Array.from(document.getElementById('lista-cancelados').children)
@@ -130,4 +180,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     document.getElementById('num-enproceso').textContent = numEnProceso;
     document.getElementById('num-finalizados').textContent = numFinalizados;
   }
+  cargarPedidos(currentPage)
+
 });

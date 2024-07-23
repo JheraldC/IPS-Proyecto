@@ -660,3 +660,22 @@ ul {
   gap: 15px;
   margin-top: 20px;
 }
+
+#paginacion-finalizados {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+#paginacion-finalizados button,
+#paginacion-finalizados span {
+  padding: 8px 12px;
+  margin: 0 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#paginacion-finalizados button:hover {
+  background-color: #f0f0f0;
+}

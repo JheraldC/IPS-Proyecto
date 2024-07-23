@@ -13,7 +13,7 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib import messages
 from django.urls import reverse
 from django.utils import timezone
-from datetime import date
+from datetime import date, datetime
 from django.http import JsonResponse
 from .models import Mesa, Pedido, PedidoDetalle, Usuario, EstadoMesa, EstadoPedido, CategoriaMenu, Menu
 from django.db.models import Sum
@@ -42,9 +42,17 @@ def index(request):
 
 @login_required
 def pedidos_view(request):
+    fecha_str = request.GET.get('fecha', str(date.today()))
+    try:
+        fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+    except ValueError:
+        fecha = date.today()
     pedidos_en_proceso = Pedido.objects.filter(EstPedCod_id=1).prefetch_related('detalles').values()
     pedidos_cancelados = Pedido.objects.filter(EstPedCod_id=2).prefetch_related('detalles').values()
-    pedidos_finalizados = Pedido.objects.filter(EstPedCod_id=3).prefetch_related('detalles').values()
+    pedidos_finalizados = Pedido.objects.filter(
+        EstPedCod_id=3, 
+        PedFec=fecha
+    ).prefetch_related('detalles').values()
 
     pedidos_con_detalles = []
     for queryset in [pedidos_cancelados, pedidos_en_proceso, pedidos_finalizados]:
@@ -94,9 +102,14 @@ def limpiar_mesa(request, mesa_id):
         return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
 def obtener_pedidos_json(request):
+    fecha_str = request.GET.get('fecha', str(date.today()))
+    try:
+        fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+    except ValueError:
+        fecha = date.today()
     pedidos_cancelados = list(Pedido.objects.filter(EstPedCod_id=1).prefetch_related('detalles').values())
     pedidos_en_proceso = list(Pedido.objects.filter(EstPedCod_id=2).prefetch_related('detalles').values())
-    pedidos_finalizados = list(Pedido.objects.filter(EstPedCod_id=3).prefetch_related('detalles').values())
+    pedidos_finalizados = list(Pedido.objects.filter(EstPedCod_id=3, PedFec=fecha).prefetch_related('detalles').values())
 
     # Asegurar que 'DetPed' sea una lista, incluso si está vacía
     for pedidos in [pedidos_cancelados, pedidos_en_proceso, pedidos_finalizados]:
@@ -105,13 +118,17 @@ def obtener_pedidos_json(request):
 
     # Paginación de pedidos finalizados
     page_number = request.GET.get('page', 1)  # Obtener el número de página de la solicitud GET
-    paginator = Paginator(pedidos_finalizados, 6)  # 6 pedidos por página
+    paginator = Paginator(pedidos_finalizados, 4)  # 4 pedidos por página
     page_obj = paginator.get_page(page_number)
 
     return JsonResponse({
         'pedidos_cancelados': pedidos_cancelados,
         'pedidos_en_proceso': pedidos_en_proceso,
-        'pedidos_finalizados': pedidos_finalizados
+        'pedidos_finalizados': list(page_obj.object_list),  # Enviar solo los pedidos de la página actual
+        'has_next': page_obj.has_next(),  # Indicar si hay una página siguiente
+        'page_number': page_obj.number,   # Número de página actual
+        'total_pages': paginator.num_pages,  # Número total de páginas
+        'total_finalizados': len(pedidos_finalizados)  # Agregar el total de pedidos finalizados
     }, encoder=DjangoJSONEncoder, safe=False)
 
 @login_required
