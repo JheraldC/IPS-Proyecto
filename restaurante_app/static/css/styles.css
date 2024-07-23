@@ -28,7 +28,6 @@ a {
   width: 50%;
   min-height: 8rem;
   display: flex;
-  justify-content: center;
   align-items: center;
   padding: 20px;
   flex-direction: column;
@@ -210,6 +209,12 @@ li {
 }
 
 .link-nav:hover {
+  background-color: #FFFFFF;
+  color: black;
+  border-color: white;
+}
+
+.activo {
   background-color: #FFFFFF;
   color: black;
   border-color: white;
@@ -406,6 +411,10 @@ i:hover {
   height: auto;
   margin-bottom: 10px;
   border-radius: 5px;
+}
+
+.btn-primary {
+  margin-top: 10px;
 }
 
 /* Estilos para los botones de categoría */

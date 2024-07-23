@@ -24,16 +24,18 @@
       </div>
       <nav>
         <ul>
-          <li>{% if request.user.TipUsuCod.TipUsuDes == "Mozo" %}<a class="link-nav" href="/mesas">Mesas</a>{% endif %}
+          <li>{% if request.user.TipUsuCod.TipUsuDes == "Mozo" %}<a class="link-nav {% block mesasM %}{% endblock %}"
+              href="/mesas">Mesas</a>{% endif %}
           </li>
           {% if request.user.TipUsuCod.TipUsuDes == "Administrador" %}
-          <li><a class="link-nav" href="{% url 'platos_admin' %}">Platos</a></li>
-          <li><a class="link-nav" href="{% url 'categorias_admin' %}">Categorías</a></li>
-          <li><a class="link-nav" href="{% url 'mesas_admin' %}">Mesas</a></li>
-          <li><a class="link-nav" href="{% url 'usuarios_admin' %}">Usuarios</a></li>
+          <li><a class="link-nav {% block platos %}{% endblock %}" href="{% url 'platos_admin' %}">Platos</a></li>
+          <li><a class="link-nav {% block categorias %}{% endblock %}"
+              href="{% url 'categorias_admin' %}">Categorías</a></li>
+          <li><a class="link-nav {% block mesas %}{% endblock %}" href="{% url 'mesas_admin' %}">Mesas</a></li>
+          <li><a class="link-nav {% block usuarios %}{% endblock %}" href="{% url 'usuarios_admin' %}">Usuarios</a></li>
           {% endif %}
           <li>{% if request.user.TipUsuCod.TipUsuDes == "Cocinero" or request.user.TipUsuCod.TipUsuDes == "Mozo" %}<a
-              class="link-nav" href="/pedidos">Pedidos</a>{% endif %}</li>
+              class="link-nav {% block pedidos %}{% endblock %}" href="/pedidos">Pedidos</a>{% endif %}</li>
         </ul>
       </nav>
       <div class="icons">

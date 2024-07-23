@@ -1,60 +1,61 @@
 from django import forms
-from .models import Mesa, Usuario, Menu, CategoriaMenu, EstadoMesa
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from .models import Mesa, Usuario, Menu, CategoriaMenu, EstadoMesa
 
-class AbrirMesaForm(forms.ModelForm):
+class BaseForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})  # Aplicar la clase form-control a todos los campos
+
+class AbrirMesaForm(BaseForm):
     num_personas = forms.IntegerField(label="# Personas")
     cliente = forms.CharField(label="Cliente")
     mozo = forms.ModelChoiceField(queryset=Usuario.objects.filter(TipUsuCod__TipUsuDes="Mozo"), label="Mozo", empty_label="Selecciona un mozo")
     comentarios = forms.CharField(widget=forms.Textarea, label="Comentarios", required=False)
-    numero = forms.IntegerField(widget=forms.HiddenInput()) #Se agrega el campo numero
+    numero = forms.IntegerField(widget=forms.HiddenInput())
 
     class Meta:
         model = Mesa
-        fields = ['numero', 'num_personas', 'cliente', 'mozo', 'comentarios']  # Agrega 'numero' a los campos
+        fields = ['numero', 'num_personas', 'cliente', 'mozo', 'comentarios']
 
-class MenuForm(forms.ModelForm):
+class MenuForm(BaseForm):
     class Meta:
         model = Menu
-        fields = '__all__'  # O especifica los campos que quieres incluir
+        fields = '__all__'
+        labels = {
+            'CatCod': 'Categoría',
+            'EstMenCod': 'Estado',
+            'MenDes': 'Nombre del Plato',
+            'MenImg': 'Imagen del Plato',
+            'precio': 'Precio',
+        }
+        widgets = {
+            'MenImg': forms.FileInput(attrs={'class': 'form-control'}),
+        }
 
-class CategoriaMenuForm(forms.ModelForm):
+class CategoriaMenuForm(BaseForm):
     class Meta:
         model = CategoriaMenu
-        fields = ['CatDes']  # Incluye el campo CatDes (nombre de la categoría)
+        fields = ['CatDes']
         labels = {
-            'CatDes': 'Nombre de la categoría'  # Personaliza la etiqueta del campo
-        }
-        widgets = {
-            'CatDes': forms.TextInput(attrs={'class': 'form-control'})  # Personaliza el widget del campo
+            'CatDes': 'Nombre de la categoría'
         }
 
-class MesaForm(forms.ModelForm):
+class MesaForm(BaseForm):
     class Meta:
         model = Mesa
-        fields = ['numero', 'EstMesCod']  # Incluye los campos necesarios
+        fields = ['EstMesCod']
         labels = {
-            'numero': 'Número de Mesa',
             'EstMesCod': 'Estado de la Mesa',
         }
-        widgets = {
-            'numero': forms.NumberInput(attrs={'class': 'form-control'}),
-            'EstMesCod': forms.Select(attrs={'class': 'form-control'}),
-        }
 
-class CustomUserCreationForm(UserCreationForm):
+class CustomUserCreationForm(BaseForm, UserCreationForm):
     class Meta(UserCreationForm.Meta):
-        model = Usuario  
-        fields = UserCreationForm.Meta.fields + ('TipUsuCod',) 
+        model = Usuario
+        fields = UserCreationForm.Meta.fields + ('TipUsuCod',)
         labels = {
             'TipUsuCod': 'Tipo de Usuario',
-        }
-        widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'TipUsuCod': forms.Select(attrs={'class': 'form-control'}),
-            'password': forms.PasswordInput(attrs={'class': 'form-control'}),
         }
 
 class CustomUserChangeForm(UserChangeForm):
@@ -64,16 +65,16 @@ class CustomUserChangeForm(UserChangeForm):
         model = Usuario
         fields = ('username', 'first_name', 'last_name', 'email', 'password', 'TipUsuCod')
         labels = {
+            'username': 'Nombre de usuario',
+            'first_name': 'Nombre',
+            'last_name': 'Apellido',
+            'email': 'Correo electrónico',
             'TipUsuCod': 'Tipo de Usuario',
         }
-        widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),  # EmailInput para el correo electrónico
-            'password': forms.PasswordInput(attrs={'class': 'form-control'}),  # PasswordInput para la contraseña
-            'TipUsuCod': forms.Select(attrs={'class': 'form-control'}),  # Select para el tipo de usuario
-        }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})  # Aplicar la clase form-control a todos los campos
         self.fields['username'].required = True
+
