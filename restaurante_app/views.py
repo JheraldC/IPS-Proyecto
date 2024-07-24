@@ -1,8 +1,9 @@
 import json
 from django.http import HttpResponse
+from django.db.models import F
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.serializers.json import DjangoJSONEncoder
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -124,33 +125,75 @@ def limpiar_mesa(request, mesa_id):
         return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
 def obtener_pedidos_json(request):
-    fecha_str = request.GET.get('fecha', str(date.today()))
     try:
+        fecha_str = request.GET.get('fecha', str(date.today()))
         fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
     except ValueError:
-        fecha = date.today()
-    pedidos_cancelados = list(Pedido.objects.filter(EstPedCod_id=1).prefetch_related('detalles').values())
-    pedidos_en_proceso = list(Pedido.objects.filter(EstPedCod_id=2).prefetch_related('detalles').values())
-    pedidos_finalizados = list(Pedido.objects.filter(EstPedCod_id=3, PedFec=fecha).prefetch_related('detalles').values())
+        return JsonResponse({'error': 'Formato de fecha inválido. Use YYYY-MM-DD.'}, status=400)
 
-    # Asegurar que 'DetPed' sea una lista, incluso si está vacía
-    for pedidos in [pedidos_cancelados, pedidos_en_proceso, pedidos_finalizados]:
-        for pedido in pedidos:
-            pedido['DetPed'] = list(pedido.get('detalles', []))
+    pedidos = Pedido.objects.filter(PedFec=fecha).order_by(F('PedFec').desc(), F('PedHor').desc()).prefetch_related('detalles').values()
 
-    # Paginación de pedidos finalizados
-    page_number = request.GET.get('page', 1)  # Obtener el número de página de la solicitud GET
-    paginator = Paginator(pedidos_finalizados, 4)  # 4 pedidos por página
-    page_obj = paginator.get_page(page_number)
+    # Organizar pedidos por estado
+    pedidos_por_estado = {
+        1: [],  # En proceso
+        2: [],  # Cancelados
+        3: [],  # Finalizados
+    }
 
+    for pedido in pedidos:
+        estado_id = pedido['EstPedCod_id']
+        if estado_id in pedidos_por_estado:
+            # Obtener los detalles del pedido relacionados
+            detalles = PedidoDetalle.objects.filter(PedCod_id=pedido['PedCod']).values()
+            pedido['DetPed'] = list(detalles)  # Asignar los detalles al pedido
+
+            for detalle in pedido['DetPed']:
+                try:
+                    menu = Menu.objects.get(MenCod=detalle['MenCod_id'])
+                    detalle['MenDes'] = menu.MenDes  # Agregar el nombre del plato al detalle
+                except Menu.DoesNotExist:
+                    detalle['MenDes'] = "Plato no encontrado"  # Manejar el caso en que el menú no exista
+
+            pedidos_por_estado[estado_id].append(pedido)
+
+    # Paginación de pedidos
+    page_number = int(request.GET.get('page', 1))
+    page_size = 4
+
+    paginated_pedidos = {}
+    paginacion_info = {}  # Diccionario para almacenar información de paginación
+
+    for estado, pedidos_list in {
+        'pedidos_en_proceso': pedidos_por_estado[1],
+        'pedidos_cancelados': pedidos_por_estado[2],
+        'pedidos_finalizados': pedidos_por_estado[3],
+    }.items():
+        paginator = Paginator(pedidos_list, page_size)
+        try:
+            page_obj = paginator.page(page_number)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+
+        paginated_pedidos[estado] = list(page_obj.object_list)
+
+        # Almacenar información de paginación para cada estado
+        paginacion_info[estado] = {
+            'has_next': page_obj.has_next(),
+            'page_number': page_obj.number,
+            'total_pages': paginator.num_pages,
+            'total_pedidos': len(pedidos_list),  # Total de pedidos para este estado
+        }
+    # Serializar los datos a JSON usando DjangoJSONEncoder
+    pedidos_en_proceso_json = json.dumps(paginated_pedidos['pedidos_en_proceso'], cls=DjangoJSONEncoder)
+    pedidos_cancelados_json = json.dumps(paginated_pedidos['pedidos_cancelados'], cls=DjangoJSONEncoder)
+    pedidos_finalizados_json = json.dumps(paginated_pedidos['pedidos_finalizados'], cls=DjangoJSONEncoder)
     return JsonResponse({
-        'pedidos_cancelados': pedidos_cancelados,
-        'pedidos_en_proceso': pedidos_en_proceso,
-        'pedidos_finalizados': list(page_obj.object_list),  # Enviar solo los pedidos de la página actual
-        'has_next': page_obj.has_next(),  # Indicar si hay una página siguiente
-        'page_number': page_obj.number,   # Número de página actual
-        'total_pages': paginator.num_pages,  # Número total de páginas
-        'total_finalizados': len(pedidos_finalizados)  # Agregar el total de pedidos finalizados
+        'pedidos_en_proceso': pedidos_en_proceso_json,
+        'pedidos_cancelados': pedidos_cancelados_json,
+        'pedidos_finalizados': pedidos_finalizados_json,
+        'paginacion': paginacion_info,  # Incluir información de paginación
     }, encoder=DjangoJSONEncoder, safe=False)
 
 @login_required

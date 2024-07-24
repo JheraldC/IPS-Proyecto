@@ -3,41 +3,31 @@ document.addEventListener('DOMContentLoaded', (event) => {
   const pedidosEnProceso = JSON.parse(document.getElementById('pedidos_en_proceso').textContent);
   const pedidosFinalizados = JSON.parse(document.getElementById('pedidos_finalizados').textContent);
 
-  const listaFinalizados = document.getElementById('lista-finalizados');
   const paginacionFinalizados = document.getElementById('paginacion-finalizados'); // Contenedor para los botones de paginación
+  // Variables currentPage para cada tipo de pedido
   let currentPage = 1;
-  // Llena las listas de pedidos (con verificación de array)
-  llenarListaPedidos('lista-cancelados', pedidosCancelados);
-  llenarListaPedidos('lista-enproceso', pedidosEnProceso);
-  llenarListaPedidos('lista-finalizados', pedidosFinalizados);
-  actualizarContadores();
+  let currentPageEnProceso = 1;
+  let currentPageCancelados = 1;
+  let currentPageFinalizados = 1;
 
   // Llenar las listas de pedidos (con verificación de array)
   function llenarListaPedidos(listaId, pedidos) {
     const lista = document.getElementById(listaId);
     lista.innerHTML = ''; // Limpiar la lista
+    const parsedPedidos = JSON.parse(pedidos);
 
-    if (!Array.isArray(pedidos) || pedidos.length === 0) {
+    if (!Array.isArray(parsedPedidos) || parsedPedidos.length === 0) {
       const mensajeVacio = document.createElement('li');
       mensajeVacio.textContent = 'No hay pedidos en esta sección.';
       lista.appendChild(mensajeVacio);
     } else {
       // Filtrar pedidos por estado
-      const pedidosFiltrados = pedidos.filter(pedido => {
+      const pedidosFiltrados = parsedPedidos.filter(pedido => {
         if (listaId === 'lista-enproceso' && pedido.EstPedCod_id === 1) return true;
         if (listaId === 'lista-cancelados' && pedido.EstPedCod_id === 2) return true;
         if (listaId === 'lista-finalizados' && pedido.EstPedCod_id === 3) return true;
         return false; // No mostrar si el estado no coincide
       });
-
-      if (listaId === 'lista-finalizados') {
-        // Ordenar los pedidos finalizados por fecha y hora de forma descendente
-        pedidosFiltrados.sort((a, b) => {
-          const fechaA = new Date(a.PedFec + 'T' + a.PedHor);
-          const fechaB = new Date(b.PedFec + 'T' + b.PedHor);
-          return fechaB - fechaA; // Orden descendente
-        });
-      }
 
       pedidosFiltrados.forEach(pedido => {
         const listItem = document.createElement('li');
@@ -84,7 +74,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
           const platoSpan = document.createElement('span');
           platoSpan.classList.add('plato');
-          platoSpan.textContent = detalle.MenCod__MenDes;
+          platoSpan.textContent = detalle.MenDes;
 
           detalleItem.appendChild(cantidadSpan);
           detalleItem.appendChild(platoSpan);
@@ -151,69 +141,71 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
   });
 
-  // Función para cargar y mostrar los pedidos de una página
+  // Función para cargar y mostrar los pedidos de una página (modificada)
   function cargarPedidos(page) {
-    const fechaActual = new Date().toISOString().split('T')[0]; // Obtener la fecha actual en formato YYYY-MM-DD
+    const fechaActual = new Date().toISOString().split('T')[0];
     fetch(`/obtener_pedidos_json/?page=${page}&fecha=${fechaActual}`)
       .then(response => response.json())
       .then(data => {
+        currentPage = data.page_number; // Actualizar la página actual
+
+        // Llenar las listas de pedidos
+        llenarListaPedidos('lista-enproceso', data.pedidos_en_proceso);
+        llenarListaPedidos('lista-cancelados', data.pedidos_cancelados);
         llenarListaPedidos('lista-finalizados', data.pedidos_finalizados);
-        currentPage = data.page_number;
 
-        // Actualizar botones de paginación (asegurarse de que se llame)
-        actualizarPaginacion(data.has_next, data.page_number, data.total_pages);
+        // Actualizar la paginación para cada tipo de pedido
+        actualizarPaginacion('paginacion-enproceso', data.paginacion.pedidos_en_proceso);
+        actualizarPaginacion('paginacion-cancelados', data.paginacion.pedidos_cancelados);
+        actualizarPaginacion('paginacion-finalizados', data.paginacion.pedidos_finalizados);
 
-        document.getElementById('num-finalizados').textContent = data.total_finalizados;
+        actualizarContadores(data.paginacion); // Actualizar los contadores de pedidos
       })
       .catch(error => {
         console.error('Error al cargar pedidos:', error);
-        // Manejo de errores en la solicitud fetch (opcional)
       });
   }
 
   // Función para actualizar los botones de paginación
-  function actualizarPaginacion(hasNext, currentPage, totalPages) {
-    paginacionFinalizados.innerHTML = ''; // Limpiar los botones existentes
+  function actualizarPaginacion(containerId, paginacionInfo) {
+    const paginacionContainer = document.getElementById(containerId);
+    paginacionContainer.innerHTML = ''; // Limpiar los botones existentes
 
     // Botón "Anterior"
-    if (currentPage > 1) {
+    if (!paginacionInfo) {
+      const mensajeVacio = document.createElement('span');
+      mensajeVacio.textContent = 'No hay pedidos';
+      paginacionContainer.appendChild(mensajeVacio);
+      return; // Salir de la función si no hay información de paginación
+    }
+
+    if (paginacionInfo.page_number > 1) {
       const prevButton = document.createElement('button');
       prevButton.textContent = 'Anterior';
-      prevButton.addEventListener('click', () => cargarPedidos(currentPage - 1));
-      paginacionFinalizados.appendChild(prevButton);
+      prevButton.addEventListener('click', () => cargarPedidos(paginacionInfo.page_number - 1));
+      paginacionContainer.appendChild(prevButton);
     }
 
     // Indicador de página actual
     const currentPageSpan = document.createElement('span');
-    currentPageSpan.textContent = `${currentPage} de ${totalPages}`;
-    paginacionFinalizados.appendChild(currentPageSpan);
+    currentPageSpan.textContent = `${paginacionInfo.page_number} de ${paginacionInfo.total_pages}`;
+    paginacionContainer.appendChild(currentPageSpan);
 
     // Botón "Siguiente"
-    if (hasNext) {
+    if (paginacionInfo.has_next) {
       const nextButton = document.createElement('button');
       nextButton.textContent = 'Siguiente';
-      nextButton.addEventListener('click', () => cargarPedidos(currentPage + 1));
-      paginacionFinalizados.appendChild(nextButton);
+      nextButton.addEventListener('click', () => cargarPedidos(paginacionInfo.page_number + 1));
+      paginacionContainer.appendChild(nextButton);
     }
   }
 
   // Función para actualizar los contadores
-  function actualizarContadores() {
-    const numCancelados = Array.from(document.getElementById('lista-cancelados').children)
-      .filter(child => child.textContent !== 'No hay pedidos en esta sección.')
-      .length;
-
-    const numEnProceso = Array.from(document.getElementById('lista-enproceso').children)
-      .filter(child => child.textContent !== 'No hay pedidos en esta sección.')
-      .length;
-
-    const numFinalizados = Array.from(document.getElementById('lista-finalizados').children)
-      .filter(child => child.textContent !== 'No hay pedidos en esta sección.')
-      .length;
-
-    document.getElementById('num-cancelados').textContent = numCancelados;
-    document.getElementById('num-enproceso').textContent = numEnProceso;
-    document.getElementById('num-finalizados').textContent = numFinalizados;
+  function actualizarContadores(paginacionInfo) {
+    // Usar total_pedidos de la información de paginación
+    document.getElementById('num-cancelados').textContent = paginacionInfo.pedidos_cancelados.total_pedidos;
+    document.getElementById('num-enproceso').textContent = paginacionInfo.pedidos_en_proceso.total_pedidos;
+    document.getElementById('num-finalizados').textContent = paginacionInfo.pedidos_finalizados.total_pedidos;
   }
   cargarPedidos(currentPage)
 

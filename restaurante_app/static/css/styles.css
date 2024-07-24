@@ -676,14 +676,14 @@ ul {
   margin-top: 20px;
 }
 
-#paginacion-finalizados {
+.paginacion {
   display: flex;
   justify-content: center;
   margin-top: 20px;
 }
 
-#paginacion-finalizados button,
-#paginacion-finalizados span {
+.paginacion button,
+.paginacion span {
   padding: 8px 12px;
   margin: 0 5px;
   border: 1px solid #ccc;
@@ -691,7 +691,7 @@ ul {
   cursor: pointer;
 }
 
-#paginacion-finalizados button:hover {
+.paginacion button:hover {
   background-color: #f0f0f0;
 }
 
