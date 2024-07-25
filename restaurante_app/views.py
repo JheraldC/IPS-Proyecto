@@ -132,6 +132,9 @@ def obtener_pedidos_json(request):
         return JsonResponse({'error': 'Formato de fecha inválido. Use YYYY-MM-DD.'}, status=400)
 
     pedidos = Pedido.objects.filter(PedFec=fecha).order_by(F('PedFec').desc(), F('PedHor').desc()).prefetch_related('detalles').values()
+    pedidos_en_proceso = Pedido.objects.filter(EstPedCod_id=1).prefetch_related('detalles').values()
+
+    pedidos = list(pedidos) + list(pedidos_en_proceso)
 
     # Organizar pedidos por estado
     pedidos_por_estado = {
