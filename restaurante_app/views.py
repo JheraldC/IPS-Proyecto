@@ -134,6 +134,12 @@ def obtener_pedidos_json(request):
     pedidos = Pedido.objects.filter(PedFec=fecha).order_by(F('PedFec').desc(), F('PedHor').desc()).prefetch_related('detalles').values()
     pedidos_en_proceso = Pedido.objects.filter(EstPedCod_id=1).prefetch_related('detalles').values()
 
+    # Obtener los IDs de los pedidos ya obtenidos
+    pedidos_ids = [p['PedCod'] for p in pedidos]
+
+    # Excluir esos IDs de la consulta de pedidos en proceso
+    pedidos_en_proceso = Pedido.objects.filter(EstPedCod_id=1).exclude(PedCod__in=pedidos_ids).prefetch_related('detalles').values()
+
     pedidos = list(pedidos) + list(pedidos_en_proceso)
 
     # Organizar pedidos por estado
